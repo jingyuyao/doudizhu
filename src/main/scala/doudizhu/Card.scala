@@ -1,23 +1,22 @@
 package doudizhu
 
-class Card(private val value: Int, private val repr: String) extends Ordered[Card] {
+case class Card private(value: Int, private val repr: String) extends Ordered[Card] {
   override def compare(that: Card): Int = this.value - that.value
 
   override def toString: String = this.repr
 }
 
 object Card {
-
-  def all: List[Card] =
+  def all: Set[Card] =
     jokers ++
       genSuitedCards("♠") ++
       genSuitedCards("♥") ++
       genSuitedCards("♦") ++
       genSuitedCards("♣")
 
-  def sorted: List[Card] = all.sorted
+  def sorted: List[Card] = all.toList.sorted
 
-  private def genSuitedCards(suit: String): List[Card] = List(
+  private def genSuitedCards(suit: String): Set[Card] = Set(
     new Card(0, " 3" + suit),
     new Card(1, " 4" + suit),
     new Card(2, " 5" + suit),
@@ -33,7 +32,7 @@ object Card {
     new Card(12, " 2" + suit),
   )
 
-  private def jokers: List[Card] = List(
+  private def jokers: Set[Card] = Set(
     new Card(13, "BJK"),
     new Card(14, "RJK"),
   )
