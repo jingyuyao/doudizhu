@@ -7,6 +7,9 @@ case class Card private(value: Int, private val repr: String) extends Ordered[Ca
 }
 
 object Card {
+  require(all.size == 54)
+  require(sorted.lengthCompare(54) == 0)
+
   def all: Set[Card] =
     jokers ++
       genSuitedCards("♠") ++
