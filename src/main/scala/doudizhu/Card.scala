@@ -17,23 +17,23 @@ object Card {
   def sorted: List[Card] = all.toList.sorted
 
   private def genSuitedCards(suit: String): Set[Card] = Set(
-    new Card(0, " 3" + suit),
-    new Card(1, " 4" + suit),
-    new Card(2, " 5" + suit),
-    new Card(3, " 6" + suit),
-    new Card(4, " 7" + suit),
-    new Card(5, " 8" + suit),
-    new Card(6, " 9" + suit),
-    new Card(7, "10" + suit),
-    new Card(8, " J" + suit),
-    new Card(9, " Q" + suit),
-    new Card(10, " K" + suit),
-    new Card(11, " A" + suit),
-    new Card(12, " 2" + suit),
+    Card(0, " 3" + suit),
+    Card(1, " 4" + suit),
+    Card(2, " 5" + suit),
+    Card(3, " 6" + suit),
+    Card(4, " 7" + suit),
+    Card(5, " 8" + suit),
+    Card(6, " 9" + suit),
+    Card(7, "10" + suit),
+    Card(8, " J" + suit),
+    Card(9, " Q" + suit),
+    Card(10, " K" + suit),
+    Card(11, " A" + suit),
+    Card(12, " 2" + suit),
   )
 
   private def jokers: Set[Card] = Set(
-    new Card(13, "BJK"),
-    new Card(14, "RJK"),
+    Card(13, "BJK"),
+    Card(14, "RJK"),
   )
 }
