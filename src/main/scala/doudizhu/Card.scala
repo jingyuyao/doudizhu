@@ -6,7 +6,7 @@ class Card(private val value: Int, private val repr: String) extends Ordered[Car
   override def toString: String = this.repr
 }
 
-object Cards {
+object Card {
 
   def all: List[Card] =
     jokers ++
