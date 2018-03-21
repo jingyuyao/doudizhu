@@ -67,4 +67,34 @@ class PlaySpec extends FlatSpec {
     assert(!twoToSix.canBeat(oneToFive))
     assert(!oneToFive.canBeat(twoToSix))
   }
+
+  "Rocket" should "beat everything" in {
+    val rocket = Play.make(Card.jokers).get
+    val single = Play.make(Card.get("A").take(1)).get
+    val double = Play.make(Card.get("A").take(2)).get
+    val triplet = Play.make(Card.get("A").take(3)).get
+    val bomb = Play.make(Card.get("A").take(4)).get
+    val sequence = Play.make(Set(Card(1, "a"), Card(2, "b"), Card(3, "c"), Card(4, "c"), Card(5, "c"))).get
+    assert(rocket.canBeat(single))
+    assert(rocket.canBeat(double))
+    assert(rocket.canBeat(triplet))
+    assert(rocket.canBeat(bomb))
+    assert(rocket.canBeat(single))
+  }
+
+  "Bomb" should "beat everything except for rocket" in {
+    val rocket = Play.make(Card.jokers).get
+    val single = Play.make(Card.get("A").take(1)).get
+    val double = Play.make(Card.get("A").take(2)).get
+    val triplet = Play.make(Card.get("A").take(3)).get
+    val bomb = Play.make(Card.get("A").take(4)).get
+    val bomb2 = Play.make(Card.get("2").take(4)).get
+    val sequence = Play.make(Set(Card(1, "a"), Card(2, "b"), Card(3, "c"), Card(4, "c"), Card(5, "c"))).get
+    assert(!bomb.canBeat(rocket))
+    assert(bomb.canBeat(double))
+    assert(bomb.canBeat(triplet))
+    assert(!bomb.canBeat(bomb2))
+    assert(bomb2.canBeat(bomb))
+    assert(bomb.canBeat(single))
+  }
 }
