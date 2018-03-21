@@ -20,7 +20,8 @@ case class Card(value: Int, suit: String) extends Ordered[Card] {
 }
 
 object Card {
-  val suits: Set[String] = Set("♠", "♥", "♦", "♣")
+//  val suits: Set[String] = Set("♠", "♥", "♦", "♣")
+  val suits: Set[String] = Set("^", "#", "$", "*")
   val suited: Set[Card] = suits.flatMap((suit) => (1 to 13).map(Card(_, suit)))
   val jokers: Set[Card] = Set(Card(14, ""), Card(15, ""))
   val all: Set[Card] = suited ++ jokers
