@@ -1,42 +1,31 @@
 package doudizhu
 
-case class Card private(value: Int, private val repr: String) extends Ordered[Card] {
+case class Card(value: Int, suit: String) extends Ordered[Card] {
+  require(1 <= value && value <= 15)
+
+  /** Suit don't matter in DouDiZhu. */
   override def compare(that: Card): Int = this.value - that.value
 
-  override def toString: String = this.repr
+  override def toString: String = value match {
+    case 9 => f" J$suit"
+    case 10 => f" Q$suit"
+    case 11 => f" K$suit"
+    case 12 => f" A$suit"
+    case 13 => f" 2$suit"
+    case 14 => "BJK"
+    case 15 => "RJK"
+    // Value 1-8 corresponds to card 3-10
+    case _ => f"${value + 2}%2d$suit"
+  }
 }
 
 object Card {
-  require(all.size == 54)
-  require(sorted.lengthCompare(54) == 0)
+  val suits: Set[String] = Set("♠", "♥", "♦", "♣")
+  val suited: Set[Card] = suits.flatMap((suit) => (1 to 13).map(Card(_, suit)))
+  val jokers: Set[Card] = Set(Card(14, ""), Card(15, ""))
+  val all: Set[Card] = suited ++ jokers
+  val sorted: List[Card] = all.toList.sorted
 
-  def all: Set[Card] =
-    jokers ++
-      genSuitedCards("♠") ++
-      genSuitedCards("♥") ++
-      genSuitedCards("♦") ++
-      genSuitedCards("♣")
-
-  def sorted: List[Card] = all.toList.sorted
-
-  private def genSuitedCards(suit: String): Set[Card] = Set(
-    Card(0, " 3" + suit),
-    Card(1, " 4" + suit),
-    Card(2, " 5" + suit),
-    Card(3, " 6" + suit),
-    Card(4, " 7" + suit),
-    Card(5, " 8" + suit),
-    Card(6, " 9" + suit),
-    Card(7, "10" + suit),
-    Card(8, " J" + suit),
-    Card(9, " Q" + suit),
-    Card(10, " K" + suit),
-    Card(11, " A" + suit),
-    Card(12, " 2" + suit),
-  )
-
-  private def jokers: Set[Card] = Set(
-    Card(13, "BJK"),
-    Card(14, "RJK"),
-  )
+  /** Get all the cards that contains the given string representation. */
+  def get(repr: String): Set[Card] = all.filter(_.toString.contains(repr))
 }
