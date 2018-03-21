@@ -1,10 +1,5 @@
 package doudizhu
 
-object PlayKind extends Enumeration {
-  type PlayKind = Value
-  val SINGLE, PAIR, TRIPLET, SEQUENCE, BOMB, ROCKET = Value
-}
-
 import doudizhu.PlayKind._
 
 case class Play private(cards: Set[Card], kind: PlayKind, value: Int) {
