@@ -1,5 +1,6 @@
 package object doudizhu {
   type Player = Int
+  type Hand = Set[Card]
 
   object PlayKind extends Enumeration {
     type PlayKind = Value

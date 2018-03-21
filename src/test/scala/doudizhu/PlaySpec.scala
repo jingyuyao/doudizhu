@@ -13,28 +13,28 @@ class PlaySpec extends FlatSpec {
   }
 
   "Four fours" should "be a bomb" in {
-    Play.make(Card.get("4")) match {
+    Play.make(Card.getAll("4")) match {
       case Some(play) => assert(play.kind == BOMB)
       case _ => fail()
     }
   }
 
   "Three three" should "be a triplet" in {
-    Play.make(Card.get("3").take(3)) match {
+    Play.make(Card.getAll("3").take(3)) match {
       case Some(play) => assert(play.kind == TRIPLET)
       case _ => fail()
     }
   }
 
   "Two twos" should "be a pair" in {
-    Play.make(Card.get("2").take(2)) match {
+    Play.make(Card.getAll("2").take(2)) match {
       case Some(play) => assert(play.kind == PAIR)
       case _ => fail()
     }
   }
 
   "One ace" should "be a single" in {
-    Play.make(Card.get("A").take(1)) match {
+    Play.make(Card.getAll("A").take(1)) match {
       case Some(play) => assert(play.kind == SINGLE)
       case _ => fail()
     }
@@ -70,10 +70,10 @@ class PlaySpec extends FlatSpec {
 
   "Rocket" should "beat everything" in {
     val rocket = Play.make(Card.jokers).get
-    val single = Play.make(Card.get("A").take(1)).get
-    val double = Play.make(Card.get("A").take(2)).get
-    val triplet = Play.make(Card.get("A").take(3)).get
-    val bomb = Play.make(Card.get("A").take(4)).get
+    val single = Play.make(Card.getAll("A").take(1)).get
+    val double = Play.make(Card.getAll("A").take(2)).get
+    val triplet = Play.make(Card.getAll("A").take(3)).get
+    val bomb = Play.make(Card.getAll("A").take(4)).get
     val sequence = Play.make(Set(Card(1, "a"), Card(2, "b"), Card(3, "c"), Card(4, "c"), Card(5, "c"))).get
     assert(rocket.canBeat(single))
     assert(rocket.canBeat(double))
@@ -84,11 +84,11 @@ class PlaySpec extends FlatSpec {
 
   "Bomb" should "beat everything except for rocket" in {
     val rocket = Play.make(Card.jokers).get
-    val single = Play.make(Card.get("A").take(1)).get
-    val double = Play.make(Card.get("A").take(2)).get
-    val triplet = Play.make(Card.get("A").take(3)).get
-    val bomb = Play.make(Card.get("A").take(4)).get
-    val bomb2 = Play.make(Card.get("2").take(4)).get
+    val single = Play.make(Card.getAll("A").take(1)).get
+    val double = Play.make(Card.getAll("A").take(2)).get
+    val triplet = Play.make(Card.getAll("A").take(3)).get
+    val bomb = Play.make(Card.getAll("A").take(4)).get
+    val bomb2 = Play.make(Card.getAll("2").take(4)).get
     val sequence = Play.make(Set(Card(1, "a"), Card(2, "b"), Card(3, "c"), Card(4, "c"), Card(5, "c"))).get
     assert(!bomb.canBeat(rocket))
     assert(bomb.canBeat(double))

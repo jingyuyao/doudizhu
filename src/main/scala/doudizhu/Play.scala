@@ -17,6 +17,8 @@ case class Play private(cards: Set[Card], kind: PlayKind, value: Int) {
       case _ => kind == that.kind && cards.size == that.cards.size && value > that.value
     }
   }
+
+  override def toString: String = f"$kind ${Card.sortedString(cards)}"
 }
 
 object Play {
@@ -34,7 +36,7 @@ object Play {
         val max = values.max
         val min = values.min
         val inSequence = max - min == values.size - 1 && values.toSet == (min to max).toSet
-        val noTwos = cards.intersect(Card.get("2")).isEmpty
+        val noTwos = cards.intersect(Card.getAll("2")).isEmpty
         val noJokers = cards.intersect(Card.jokers).isEmpty
         if (inSequence && noTwos && noJokers)
           Some(SEQUENCE)
