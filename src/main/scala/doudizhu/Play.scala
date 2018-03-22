@@ -2,7 +2,7 @@ package doudizhu
 
 import doudizhu.PlayKind._
 
-case class Play private(cards: Cards, kind: PlayKind, value: Int) {
+case class Play(cards: Cards, kind: PlayKind, value: Int) {
   def canBeat(that: Play): Boolean = {
     kind match {
       // Rocket can beat everything
@@ -22,7 +22,7 @@ case class Play private(cards: Cards, kind: PlayKind, value: Int) {
 }
 
 object Play {
-  def make(cards: Cards): Option[Play] = {
+  def maybeCreate(cards: Cards): Option[Play] = {
     // Values can have duplicates
     val values: List[Int] = cards.set.toList.map(_.value)
     val sameValue: Boolean = values.forall(_ == values.head)

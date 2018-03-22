@@ -7,7 +7,7 @@ object Game {
   def create(): AuctionState = {
     val randomCards = Random.shuffle(Cards.all.sorted)
     val (chest, restCards) = randomCards.splitAt(3)
-    val hands = restCards.grouped(restCards.size / State.players.size).map((cards) => Cards(cards.toSet)).toList
+    val hands = restCards.grouped(17).map((cards) => Cards(cards.toSet)).toList
     val handsMap = State.players.zip(hands).toMap
     val initialPick = State.players(Random.nextInt(State.players.size))
     AuctionState(initialPick, handsMap, initialPick, Cards(chest.toSet))
@@ -42,8 +42,8 @@ object Game {
             }
             else {
               val cardNames = input.split(" ").filter(_.nonEmpty).map(_.trim)
-              val cards = playing.currentHand(cardNames:_*)
-              Play.make(cards) match {
+              val cards = playing.currentHand(cardNames: _*)
+              Play.maybeCreate(cards) match {
                 case Some(play) =>
                   playing.play(play) match {
                     case Some(newPlaying) => newPlaying
