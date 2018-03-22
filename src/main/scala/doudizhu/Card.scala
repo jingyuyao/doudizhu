@@ -19,18 +19,27 @@ case class Card(value: Int, suit: String) extends Ordered[Card] {
   }
 }
 
-object Card {
+case class Cards(set: Set[Card]) {
+  lazy val sorted: List[Card] = set.toList.sorted
+
+  /** Get all the cards that partially contains the given string representation. */
+  def apply(repr: String): Cards = Cards(set.filter(_.toString.contains(repr)))
+
+  /** Get all the cards that partially contains any of the string representations. */
+  def apply(reprs: String*): Cards =
+    Cards(reprs.flatMap((repr) => set.filter(_.toString.contains(repr))).toSet)
+
+  /** Select the first n elements. */
+  def take(n: Int): Cards = Cards(set.take(n))
+
+  override def toString: String = sorted.mkString(" ")
+}
+
+object Cards {
   //  val suits: Set[String] = Set("♠", "♥", "♦", "♣")
-  val suits: Set[String] = Set("@", "#", "$", "%")
-  val suited: Set[Card] = suits.flatMap((suit) => (1 to 13).map(Card(_, suit)))
-  val jokers: Set[Card] = Set(Card(14, ""), Card(15, ""))
-  val all: Set[Card] = suited ++ jokers
-  val sorted: List[Card] = all.toList.sorted
-
-  def get(cards: Set[Card], repr: String): Set[Card] = cards.filter(_.toString.contains(repr))
-
-  /** Get all the cards that contains the given string representation. */
-  def getAll(repr: String): Set[Card] = get(all, repr)
-
-  def sortedString(cards: Set[Card]): String = cards.toList.sorted.mkString(" ")
+  // Suit don't really matter in DouDiZhu so we will just use simple to type characters.
+  val suits: Set[String] = Set("+", "-", "*", "%")
+  val suited: Cards = Cards(suits.flatMap((suit) => (1 to 13).map(Card(_, suit))))
+  val jokers: Cards = Cards(Set(Card(14, ""), Card(15, "")))
+  val all: Cards = Cards(suited.set ++ jokers.set)
 }

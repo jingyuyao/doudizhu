@@ -5,9 +5,9 @@ object State {
 }
 
 trait State {
-  val hands: Map[Player, Hand]
+  val hands: Map[Player, Cards]
   val currentPlayer: Player
-  val currentHand: Hand = hands(currentPlayer)
+  val currentHand: Cards = hands(currentPlayer)
   val nextPlayer: Player = {
     val nextIndex = (State.players.indexOf(currentPlayer) + 1) % State.players.size
     State.players(nextIndex)
@@ -16,22 +16,24 @@ trait State {
   def pass(): State
 
   override def toString: String =
-    f"Current player: $currentPlayer\nCurrent hand: ${Card.sortedString(currentHand)}"
+    f"Current player: $currentPlayer\nCurrent hand: $currentHand"
 }
 
 case class AuctionState(currentPlayer: Player,
-                        hands: Map[Player, Hand],
+                        hands: Map[Player, Cards],
                         originalPick: Player,
-                        chest: Set[Card]) extends State {
+                        chest: Cards) extends State {
   require({
-    val cardsInHand = hands.values.fold(Set())(_ ++ _)
-    Card.all == cardsInHand ++ chest
+    val cardsInHand = hands.values.map(_.set).fold(Set())(_ ++ _)
+    Cards.all.set == cardsInHand ++ chest.set
   })
 
   def pass(): State = {
     if (nextPlayer == originalPick) {
-      val newHands = hands.updated(nextPlayer, hands(nextPlayer).union(chest))
-      PlayingState(nextPlayer, newHands, nextPlayer, List())
+      val oldHand = hands(originalPick)
+      val newHand = Cards(oldHand.set.union(chest.set))
+      val newHands = hands.updated(originalPick, newHand)
+      PlayingState(originalPick, newHands, originalPick, List())
     }
     else {
       AuctionState(nextPlayer, hands, originalPick, chest)
@@ -39,7 +41,8 @@ case class AuctionState(currentPlayer: Player,
   }
 
   def acceptLandlord(): PlayingState = {
-    val newHands = hands.updated(currentPlayer, currentHand.union(chest))
+    val newHand = Cards(currentHand.set.union(chest.set))
+    val newHands = hands.updated(currentPlayer, newHand)
     PlayingState(currentPlayer, newHands, currentPlayer, List())
   }
 
@@ -47,26 +50,27 @@ case class AuctionState(currentPlayer: Player,
 }
 
 case class PlayingState(currentPlayer: Player,
-                        hands: Map[Player, Hand],
+                        hands: Map[Player, Cards],
                         landlord: Player,
                         plays: List[(Player, Play)]) extends State {
   require({
-    val cardsInHand = hands.values.fold(Set())(_ ++ _)
-    val cardsPlayed = plays.map(_._2.cards).fold(Set())(_ ++ _)
-    Card.all == cardsInHand ++ cardsPlayed
+    val cardsInHand = hands.values.map(_.set).fold(Set())(_ ++ _)
+    val cardsPlayed = plays.map(_._2.cards.set).fold(Set())(_ ++ _)
+    Cards.all.set == cardsInHand ++ cardsPlayed
   })
 
-  val winner: Option[Player] = hands.find(_._2.isEmpty).map(_._1)
+  val winner: Option[Player] = hands.find(_._2.set.isEmpty).map(_._1)
 
   def pass(): State = PlayingState(nextPlayer, hands, landlord, plays)
 
   def play(play: Play): Option[PlayingState] = {
     // Current player must own this play
-    if (!play.cards.subsetOf(currentHand))
+    if (!play.cards.set.subsetOf(currentHand.set))
       None
 
     if (plays.isEmpty || plays.last._1 == currentPlayer || play.canBeat(plays.last._2)) {
-      val newHands = hands.updated(currentPlayer, currentHand.diff(play.cards))
+      val newHand = Cards(currentHand.set.diff(play.cards.set))
+      val newHands = hands.updated(currentPlayer, newHand)
       Some(PlayingState(nextPlayer, newHands, landlord, plays :+ (currentPlayer, play)))
     }
     else {

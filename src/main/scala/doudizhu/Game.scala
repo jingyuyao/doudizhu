@@ -5,12 +5,12 @@ import scala.util.Random
 
 object Game {
   def create(): AuctionState = {
-    val randomCards = Random.shuffle(Card.sorted)
+    val randomCards = Random.shuffle(Cards.all.sorted)
     val (chest, restCards) = randomCards.splitAt(3)
-    val hands = restCards.grouped(restCards.size / State.players.size).map(_.toSet).toList
+    val hands = restCards.grouped(restCards.size / State.players.size).map((cards) => Cards(cards.toSet)).toList
     val handsMap = State.players.zip(hands).toMap
     val initialPick = State.players(Random.nextInt(State.players.size))
-    AuctionState(initialPick, handsMap, initialPick, chest.toSet)
+    AuctionState(initialPick, handsMap, initialPick, Cards(chest.toSet))
   }
 
   def loop(state: State): Unit = {
@@ -42,17 +42,17 @@ object Game {
             }
             else {
               val cardNames = input.split(" ").filter(_.nonEmpty).map(_.trim)
-              val cards = cardNames.flatMap((name) => Card.get(playing.currentHand, name)).toSet
+              val cards = playing.currentHand(cardNames:_*)
               Play.make(cards) match {
                 case Some(play) =>
                   playing.play(play) match {
                     case Some(newPlaying) => newPlaying
                     case None =>
-                      println(f"Your play can't beat the last one: ${Card.sortedString(play.cards)}")
+                      println(f"Your play can't beat the last one: ${play.cards}")
                       playing
                   }
                 case None =>
-                  println(f"The cards you picked is not a valid play: ${Card.sortedString(cards)}")
+                  println(f"The cards you picked is not a valid play: $cards")
                   playing
               }
             }
