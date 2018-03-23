@@ -1,6 +1,10 @@
 package object doudizhu {
-  type Player = Int
-  type Hand = Set[Card]
+  /** Opaque ID of a player. */
+  type PlayerId = Int
+  /** Obfuscated ID used get private states related to a player. */
+  type PlayerKey = Int
+
+  case class Player(key: PlayerKey, agent: Agent)
 
   object PlayKind extends Enumeration {
     type PlayKind = Value

@@ -1,66 +1,45 @@
 package doudizhu
 
-object State {
-  // Only supports three player variant of the game.
-  val players: List[Player] = List(1, 2, 3)
-}
-
+/** Never leak PlayerKeys. */
 trait State {
-  val hands: Map[Player, Cards]
-  val currentPlayer: Player
-  val currentHand: Cards = hands(currentPlayer)
-  val nextPlayer: Player = {
-    val nextIndex = (State.players.indexOf(currentPlayer) + 1) % State.players.size
-    State.players(nextIndex)
-  }
+  protected val hands: Map[PlayerKey, Cards]
+  protected val playerIds: Map[PlayerKey, PlayerId]
 
-  def pass(): State
+  def getHand(playerKey: PlayerKey): Cards = hands(playerKey)
 
-  override def toString: String =
-    f"Current player: $currentPlayer\nCurrent hand: $currentHand"
+  def getPlayerId(playerKey: PlayerKey): PlayerId = playerIds(playerKey)
 }
 
-case class AuctionState(currentPlayer: Player,
-                        hands: Map[Player, Cards],
-                        originalPick: Player,
-                        chest: Cards) extends State {
+case class AuctionState(protected val hands: Map[PlayerKey, Cards],
+                        protected val playerIds: Map[PlayerKey, PlayerId],
+                        private val chest: Cards) extends State {
   require(chest.set.size == 3)
   require(hands.values.map(_.set.size).forall(_ == 17))
+  // Contains a copy of each card.
   require({
     val cardsInHand = hands.values.map(_.set).fold(Set())(_ ++ _)
     Cards.all.set == cardsInHand ++ chest.set
   })
 
-  def pass(): State = {
-    if (nextPlayer == originalPick) {
-      val landlordHand = Cards(hands(originalPick).set.union(chest.set))
-      val startingHands = hands.updated(originalPick, landlordHand)
-      PlayingState(originalPick, startingHands, originalPick, List(), startingHands)
-    }
-    else {
-      AuctionState(nextPlayer, hands, originalPick, chest)
-    }
+  def setLandlord(playerKey: PlayerKey): PlayingState = {
+    val landlordHand = Cards(getHand(playerKey).set.union(chest.set))
+    val startingHands = hands.updated(playerKey, landlordHand)
+    PlayingState(startingHands, playerIds, playerKey, List(), startingHands)
   }
-
-  def acceptLandlord(): PlayingState = {
-    val landlordHand = Cards(currentHand.set.union(chest.set))
-    val startingHands = hands.updated(currentPlayer, landlordHand)
-    PlayingState(currentPlayer, startingHands, currentPlayer, List(), startingHands)
-  }
-
-  override def toString: String = "Auctioning\n" + super.toString
 }
 
-case class PlayingState(currentPlayer: Player,
-                        hands: Map[Player, Cards],
-                        landlord: Player,
-                        plays: List[(Player, Play)],
-                        startingHands: Map[Player, Cards]) extends State {
+case class PlayingState(protected val hands: Map[PlayerKey, Cards],
+                        protected val playerIds: Map[PlayerKey, PlayerId],
+                        private val landlord: PlayerKey,
+                        private val plays: List[(PlayerKey, Play)],
+                        private val startingHands: Map[PlayerKey, Cards]) extends State {
+  // Contains a copy of each card.
   require({
     val cardsInHand = hands.values.map(_.set).fold(Set())(_ ++ _)
     val cardsPlayed = plays.map(_._2.cards.set).fold(Set())(_ ++ _)
     Cards.all.set == cardsInHand ++ cardsPlayed
   })
+  // All plays can be derived from their respective owner's hands.
   require({
     hands.forall({
       case (player, cardsInHand) =>
@@ -68,34 +47,41 @@ case class PlayingState(currentPlayer: Player,
         cardsInHand.set ++ playedCards == startingHands(player).set
     })
   })
-
-  val winner: Option[Player] = hands.find(_._2.set.isEmpty).map(_._1)
-
-  def pass(): State = PlayingState(nextPlayer, hands, landlord, plays, startingHands)
-
-  def play(play: Play): Option[PlayingState] = {
-    // Current player must own this play
-    if (!play.cards.set.subsetOf(currentHand.set))
-      None
-
-    if (plays.isEmpty || plays.last._1 == currentPlayer || play.canBeat(plays.last._2)) {
-      val newHand = Cards(currentHand.set.diff(play.cards.set))
-      val newHands = hands.updated(currentPlayer, newHand)
-      Some(PlayingState(nextPlayer, newHands, landlord, plays :+ (currentPlayer, play), startingHands))
+  // Each play can beat the last one.
+  require(
+    plays match {
+      case Seq() => true
+      case Seq(_) => true
+      case _ => plays.sliding(2).forall({ case List(left, right) => canBeat(right, left) })
     }
-    else {
-      None
+  )
+
+  def getWinner: Option[PlayerId] = hands.find(_._2.set.isEmpty).map(_._1).map(getPlayerId)
+
+  def getLandlord: PlayerId = getPlayerId(landlord)
+
+  def getPlays: List[(PlayerId, Play)] = plays.map((play) => (getPlayerId(play._1), play._2))
+
+  def isValid(playerKey: PlayerKey, play: Play): Boolean = {
+    val playerOwnsPlay = play.cards.set.subsetOf(hands(playerKey).set)
+    val beatLastPlay = plays.lastOption match {
+      case Some(lastPlay) => canBeat((playerKey, play), lastPlay)
+      case None => true
     }
+    getWinner.isEmpty && playerOwnsPlay && beatLastPlay
   }
 
-  override def toString: String = {
-    val lastPlay =
-      if (plays.isEmpty) {
-        "New game\n"
-      }
-      else {
-        f"Last play: player ${plays.last._1} played ${plays.last._2}\n"
-      }
-    lastPlay + super.toString
+  /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
+  def play(playerKey: PlayerKey, play: Play): PlayingState = {
+    if (!isValid(playerKey, play))
+      throw new IllegalArgumentException("Invalid play")
+
+    val newPlayerHand = Cards(hands(playerKey).set.diff(play.cards.set))
+    val newHands = hands.updated(playerKey, newPlayerHand)
+    PlayingState(newHands, playerIds, landlord, plays :+ (playerKey, play), startingHands)
   }
+
+  /** Takes who made the play into consideration. */
+  private def canBeat(newPlay: (PlayerKey, Play), lastPlay: (PlayerKey, Play)) =
+    lastPlay._1 == newPlay._1 || newPlay._2.canBeat(lastPlay._2)
 }

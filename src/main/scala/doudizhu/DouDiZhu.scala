@@ -2,6 +2,6 @@ package doudizhu
 
 object DouDiZhu {
   def main(args: Array[String]): Unit = {
-    Game.loop(Game.create())
+    Game.loop(Game.create(List(new HumanAgent, new HumanAgent, new HumanAgent)))
   }
 }

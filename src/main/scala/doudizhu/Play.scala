@@ -43,7 +43,6 @@ object Play {
         else
           None
       case _ => None
-
     }
     maybeKind match {
       case Some(kind) => Some(Play(cards, kind, values.sum))

@@ -1,8 +1,15 @@
 package doudizhu
 
-case class Agent(cards: Set[Card]) {
-  val won: Boolean = cards.isEmpty
-  /** All possible plays, very expensive operation. */
+trait Agent {
+
+  /** Returns whether to become the landlord. */
+  def getAction(playerKey: PlayerKey, auctionState: AuctionState): Boolean
+
+  /** Returns the play to make, None to pass. */
+  def getAction(playerKey: PlayerKey, playingState: PlayingState): Option[Play]
+}
+
+/** All possible plays, very expensive operation. */
 //  lazy val allPlays: List[Play] = cards.subsets().flatMap(Play.make).toList
 //
 //  /** Possible plays that can beat the `other` play, much cheaper than accessing `allPlays`. */
@@ -20,4 +27,3 @@ case class Agent(cards: Set[Card]) {
 //    val normalPlays = cards.subsets(other.cards.size).flatMap(Play.make).filter(_.canBeat(other))
 //    rocketPlays ++ bombPlays ++ normalPlays
 //  }
-}
