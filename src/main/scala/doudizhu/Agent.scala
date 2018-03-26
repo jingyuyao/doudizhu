@@ -1,12 +1,14 @@
 package doudizhu
 
 trait Agent {
+  val id: PlayerId
+  val secret: PlayerSecret
 
   /** Returns whether to become the landlord. */
-  def getAction(playerKey: PlayerSecret, auctionState: AuctionState): Boolean
+  def getAction(auctionState: AuctionState): Boolean
 
   /** Returns the play to make, None to pass. */
-  def getAction(playerKey: PlayerSecret, playingState: PlayingState): Option[Play]
+  def getAction(playingState: PlayingState): Option[Play]
 }
 
 /** All possible plays, very expensive operation. */
