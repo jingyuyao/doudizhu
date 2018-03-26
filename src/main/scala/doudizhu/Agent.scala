@@ -8,7 +8,7 @@ trait Agent {
   def getAction(auctionState: AuctionState): Boolean
 
   /** Returns the play to make, None to pass. */
-  def getAction(playingState: PlayingState): Option[Play]
+  def getAction(playingState: PlayingState): Option[Combo]
 }
 
 /** All possible plays, very expensive operation. */

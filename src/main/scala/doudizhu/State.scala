@@ -31,7 +31,7 @@ case class AuctionState(protected val hands: Map[PlayerSecret, Cards],
 case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
                         protected val secretIdMap: Map[PlayerSecret, PlayerId],
                         landlord: PlayerId,
-                        plays: List[(PlayerId, Play)],
+                        plays: List[(PlayerId, Combo)],
                         private val startingHands: Map[PlayerSecret, Cards]) extends State {
   // Contains a copy of each card.
   require({
@@ -58,7 +58,7 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
 
   def getWinner: Option[PlayerId] = hands.find(_._2.set.isEmpty).map(_._1).map(getPlayerId)
 
-  def isValid(secret: PlayerSecret, play: Play): Boolean = {
+  def isValid(secret: PlayerSecret, play: Combo): Boolean = {
     val playerOwnsPlay = play.cards.set.subsetOf(hands(secret).set)
     val beatLastPlay = plays.lastOption match {
       case Some(lastPlay) => canBeat((getPlayerId(secret), play), lastPlay)
@@ -68,7 +68,7 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
-  def play(secret: PlayerSecret, play: Play): PlayingState = {
+  def play(secret: PlayerSecret, play: Combo): PlayingState = {
     if (!isValid(secret, play))
       throw new IllegalArgumentException("Invalid play")
 
@@ -78,6 +78,6 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
   }
 
   /** Takes who made the play into consideration. */
-  private def canBeat(newPlay: (PlayerId, Play), lastPlay: (PlayerId, Play)) =
+  private def canBeat(newPlay: (PlayerId, Combo), lastPlay: (PlayerId, Combo)) =
     lastPlay._1 == newPlay._1 || newPlay._2.canBeat(lastPlay._2)
 }

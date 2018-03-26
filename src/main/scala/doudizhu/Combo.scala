@@ -2,8 +2,8 @@ package doudizhu
 
 import doudizhu.PlayKind._
 
-case class Play(cards: Cards, kind: PlayKind, value: Int) {
-  def canBeat(that: Play): Boolean = {
+case class Combo(cards: Cards, kind: PlayKind, value: Int) {
+  def canBeat(that: Combo): Boolean = {
     kind match {
       // Rocket can beat everything
       case ROCKET => true
@@ -21,8 +21,8 @@ case class Play(cards: Cards, kind: PlayKind, value: Int) {
   override def toString: String = f"$kind $cards"
 }
 
-object Play {
-  def maybeCreate(cards: Cards): Option[Play] = {
+object Combo {
+  def maybeCreate(cards: Cards): Option[Combo] = {
     // Values can have duplicates
     val values: List[Int] = cards.set.toList.map(_.value)
     val sameValue: Boolean = values.forall(_ == values.head)
@@ -45,7 +45,7 @@ object Play {
       case _ => None
     }
     maybeKind match {
-      case Some(kind) => Some(Play(cards, kind, values.sum))
+      case Some(kind) => Some(Combo(cards, kind, values.sum))
       case None => None
     }
   }

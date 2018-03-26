@@ -19,7 +19,7 @@ class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
   }
 
   /** Returns the play to make, None to pass. */
-  override def getAction(playingState: PlayingState): Option[Play] = {
+  override def getAction(playingState: PlayingState): Option[Combo] = {
     printBanner()
     println(f"You are player ${playingState.getPlayerId(secret)}")
     println(f"Your hand: ${playingState.getHand(secret)}")
@@ -40,7 +40,7 @@ class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
         val selections = input.split(" ").filter(_.nonEmpty).map(_.trim)
         val hand = playingState.getHand(secret)
         val selectedCards = hand(selections: _*)
-        Play.maybeCreate(selectedCards) match {
+        Combo.maybeCreate(selectedCards) match {
           case Some(play) =>
             if (playingState.isValid(secret, play)) {
               println(f"Play $play [Y/N]")
