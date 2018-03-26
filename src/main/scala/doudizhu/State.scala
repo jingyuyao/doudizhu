@@ -58,23 +58,23 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
 
   def getWinner: Option[PlayerId] = hands.find(_._2.set.isEmpty).map(_._1).map(getPlayerId)
 
-  def isValid(secret: PlayerSecret, play: Combo): Boolean = {
-    val playerOwnsPlay = play.cards.set.subsetOf(hands(secret).set)
+  def isValid(secret: PlayerSecret, combo: Combo): Boolean = {
+    val playerOwnsPlay = combo.cards.set.subsetOf(hands(secret).set)
     val beatLastPlay = plays.lastOption match {
-      case Some(lastPlay) => canBeat(Play(getPlayerId(secret), play), lastPlay)
+      case Some(lastPlay) => canBeat(Play(getPlayerId(secret), combo), lastPlay)
       case None => true
     }
     getWinner.isEmpty && playerOwnsPlay && beatLastPlay
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
-  def play(secret: PlayerSecret, play: Combo): PlayingState = {
-    if (!isValid(secret, play))
+  def play(secret: PlayerSecret, combo: Combo): PlayingState = {
+    if (!isValid(secret, combo))
       throw new IllegalArgumentException("Invalid play")
 
-    val newPlayerHand = Cards(hands(secret).set.diff(play.cards.set))
+    val newPlayerHand = Cards(hands(secret).set.diff(combo.cards.set))
     val newHands = hands.updated(secret, newPlayerHand)
-    PlayingState(newHands, secretIdMap, landlord, plays :+ Play(getPlayerId(secret), play), startingHands)
+    PlayingState(newHands, secretIdMap, landlord, plays :+ Play(getPlayerId(secret), combo), startingHands)
   }
 
   /** Takes who made the play into consideration. */
