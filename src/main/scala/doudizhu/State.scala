@@ -2,16 +2,16 @@ package doudizhu
 
 /** Never leak PlayerKeys. */
 trait State {
-  protected val hands: Map[PlayerKey, Cards]
-  protected val playerIds: Map[PlayerKey, PlayerId]
+  protected val hands: Map[PlayerSecret, Cards]
+  protected val playerIds: Map[PlayerSecret, PlayerId]
 
-  def getHand(playerKey: PlayerKey): Cards = hands(playerKey)
+  def getHand(playerKey: PlayerSecret): Cards = hands(playerKey)
 
-  def getPlayerId(playerKey: PlayerKey): PlayerId = playerIds(playerKey)
+  def getPlayerId(playerKey: PlayerSecret): PlayerId = playerIds(playerKey)
 }
 
-case class AuctionState(protected val hands: Map[PlayerKey, Cards],
-                        protected val playerIds: Map[PlayerKey, PlayerId],
+case class AuctionState(protected val hands: Map[PlayerSecret, Cards],
+                        protected val playerIds: Map[PlayerSecret, PlayerId],
                         private val chest: Cards) extends State {
   require(chest.set.size == 3)
   require(hands.values.map(_.set.size).forall(_ == 17))
@@ -21,18 +21,18 @@ case class AuctionState(protected val hands: Map[PlayerKey, Cards],
     Cards.all.set == cardsInHand ++ chest.set
   })
 
-  def setLandlord(playerKey: PlayerKey): PlayingState = {
+  def setLandlord(playerKey: PlayerSecret): PlayingState = {
     val landlordHand = Cards(getHand(playerKey).set.union(chest.set))
     val startingHands = hands.updated(playerKey, landlordHand)
     PlayingState(startingHands, playerIds, playerKey, List(), startingHands)
   }
 }
 
-case class PlayingState(protected val hands: Map[PlayerKey, Cards],
-                        protected val playerIds: Map[PlayerKey, PlayerId],
-                        private val landlord: PlayerKey,
-                        private val plays: List[(PlayerKey, Play)],
-                        private val startingHands: Map[PlayerKey, Cards]) extends State {
+case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
+                        protected val playerIds: Map[PlayerSecret, PlayerId],
+                        private val landlord: PlayerSecret,
+                        private val plays: List[(PlayerSecret, Play)],
+                        private val startingHands: Map[PlayerSecret, Cards]) extends State {
   // Contains a copy of each card.
   require({
     val cardsInHand = hands.values.map(_.set).fold(Set())(_ ++ _)
@@ -62,7 +62,7 @@ case class PlayingState(protected val hands: Map[PlayerKey, Cards],
 
   def getPlays: List[(PlayerId, Play)] = plays.map((play) => (getPlayerId(play._1), play._2))
 
-  def isValid(playerKey: PlayerKey, play: Play): Boolean = {
+  def isValid(playerKey: PlayerSecret, play: Play): Boolean = {
     val playerOwnsPlay = play.cards.set.subsetOf(hands(playerKey).set)
     val beatLastPlay = plays.lastOption match {
       case Some(lastPlay) => canBeat((playerKey, play), lastPlay)
@@ -72,7 +72,7 @@ case class PlayingState(protected val hands: Map[PlayerKey, Cards],
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
-  def play(playerKey: PlayerKey, play: Play): PlayingState = {
+  def play(playerKey: PlayerSecret, play: Play): PlayingState = {
     if (!isValid(playerKey, play))
       throw new IllegalArgumentException("Invalid play")
 
@@ -82,6 +82,6 @@ case class PlayingState(protected val hands: Map[PlayerKey, Cards],
   }
 
   /** Takes who made the play into consideration. */
-  private def canBeat(newPlay: (PlayerKey, Play), lastPlay: (PlayerKey, Play)) =
+  private def canBeat(newPlay: (PlayerSecret, Play), lastPlay: (PlayerSecret, Play)) =
     lastPlay._1 == newPlay._1 || newPlay._2.canBeat(lastPlay._2)
 }

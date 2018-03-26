@@ -4,7 +4,7 @@ import scala.io.StdIn.readLine
 
 class HumanAgent extends Agent {
   /** Returns whether to become the landlord. */
-  override def getAction(playerKey: PlayerKey, auctionState: AuctionState): Boolean = {
+  override def getAction(playerKey: PlayerSecret, auctionState: AuctionState): Boolean = {
     printBanner()
     println("Auctioning...")
     println(f"Your hand: ${auctionState.getHand(playerKey)}")
@@ -19,7 +19,7 @@ class HumanAgent extends Agent {
   }
 
   /** Returns the play to make, None to pass. */
-  override def getAction(playerKey: PlayerKey, playingState: PlayingState): Option[Play] = {
+  override def getAction(playerKey: PlayerSecret, playingState: PlayingState): Option[Play] = {
     printBanner()
     println(f"You are player ${playingState.getPlayerId(playerKey)}")
     println(f"Your hand: ${playingState.getHand(playerKey)}")

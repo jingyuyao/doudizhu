@@ -13,7 +13,7 @@ case class Game(state: State, players: List[Player], currentPlayer: Player, turn
 object Game {
   def create(agents: List[Agent]): Game = {
     require(agents.size == 3)
-    val players = agents.map(Player(Random.nextInt, _))
+    val players = agents.map(Player(Random.nextString(10), _))
     val playerKeys = players.map(_.key)
     val playerIds = playerKeys.zipWithIndex.toMap
     val randomCards = Random.shuffle(Cards.all.sorted)

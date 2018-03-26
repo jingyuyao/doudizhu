@@ -2,9 +2,9 @@ package object doudizhu {
   /** Opaque ID of a player. */
   type PlayerId = Int
   /** Obfuscated ID used get private states related to a player. */
-  type PlayerKey = Int
+  type PlayerSecret = String
 
-  case class Player(key: PlayerKey, agent: Agent)
+  case class Player(key: PlayerSecret, agent: Agent)
 
   object PlayKind extends Enumeration {
     type PlayKind = Value
