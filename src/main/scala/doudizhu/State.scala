@@ -31,19 +31,19 @@ case class AuctionState(protected val hands: Map[PlayerSecret, Cards],
 case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
                         protected val secretIdMap: Map[PlayerSecret, PlayerId],
                         landlord: PlayerId,
-                        plays: List[(PlayerId, Combo)],
+                        plays: List[Play],
                         private val startingHands: Map[PlayerSecret, Cards]) extends State {
   // Contains a copy of each card.
   require({
     val cardsInHand = hands.values.map(_.set).fold(Set())(_ ++ _)
-    val cardsPlayed = plays.map(_._2.cards.set).fold(Set())(_ ++ _)
+    val cardsPlayed = plays.map(_.combo.cards.set).fold(Set())(_ ++ _)
     Cards.all.set == cardsInHand ++ cardsPlayed
   })
   // All plays can be derived from their respective owner's hands.
   require({
     hands.forall({
       case (secret, cardsInHand) =>
-        val playedCards = plays.filter(_._1 == getPlayerId(secret)).map(_._2.cards.set).fold(Set())(_ ++ _)
+        val playedCards = plays.filter(_.id == getPlayerId(secret)).map(_.combo.cards.set).fold(Set())(_ ++ _)
         cardsInHand.set ++ playedCards == startingHands(secret).set
     })
   })
@@ -61,7 +61,7 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
   def isValid(secret: PlayerSecret, play: Combo): Boolean = {
     val playerOwnsPlay = play.cards.set.subsetOf(hands(secret).set)
     val beatLastPlay = plays.lastOption match {
-      case Some(lastPlay) => canBeat((getPlayerId(secret), play), lastPlay)
+      case Some(lastPlay) => canBeat(Play(getPlayerId(secret), play), lastPlay)
       case None => true
     }
     getWinner.isEmpty && playerOwnsPlay && beatLastPlay
@@ -74,10 +74,10 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
 
     val newPlayerHand = Cards(hands(secret).set.diff(play.cards.set))
     val newHands = hands.updated(secret, newPlayerHand)
-    PlayingState(newHands, secretIdMap, landlord, plays :+ (getPlayerId(secret), play), startingHands)
+    PlayingState(newHands, secretIdMap, landlord, plays :+ Play(getPlayerId(secret), play), startingHands)
   }
 
   /** Takes who made the play into consideration. */
-  private def canBeat(newPlay: (PlayerId, Combo), lastPlay: (PlayerId, Combo)) =
-    lastPlay._1 == newPlay._1 || newPlay._2.canBeat(lastPlay._2)
+  private def canBeat(newPlay: Play, lastPlay: Play) =
+    lastPlay.id == newPlay.id || newPlay.combo.canBeat(lastPlay.combo)
 }

@@ -24,7 +24,7 @@ class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
     println(f"You are player ${playingState.getPlayerId(secret)}")
     println(f"Your hand: ${playingState.getHand(secret)}")
     playingState.plays.lastOption match {
-      case Some(play) => println(f"Last play by player ${play._1}: ${play._2}")
+      case Some(play) => println(f"Last play by player ${play.id}: ${play.combo}")
       case None => println("Play anything")
     }
     println("Your action [PASS/INFO/PLAYS/Cards to play]")
@@ -34,7 +34,7 @@ class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
         println(f"Landlord is player ${playingState.landlord}")
         getAction(playingState)
       case "PLAYS" =>
-        playingState.plays.foreach((p) => println(f"Player ${p._1}: ${p._2}"))
+        playingState.plays.foreach((p) => println(f"Player ${p.id}: ${p.combo}"))
         getAction(playingState)
       case input =>
         val selections = input.split(" ").filter(_.nonEmpty).map(_.trim)
