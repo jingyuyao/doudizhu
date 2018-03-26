@@ -36,7 +36,7 @@ object Game {
       case playingState: PlayingState =>
         playingState.getWinner match {
           case Some(winner) =>
-            if (winner == playingState.getLandlord)
+            if (winner == playingState.landlord)
               println(f"Landlord player $winner won!")
             else
               println(f"Peasant player $winner won!")

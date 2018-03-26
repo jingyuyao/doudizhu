@@ -23,7 +23,7 @@ class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
     printBanner()
     println(f"You are player ${playingState.getPlayerId(secret)}")
     println(f"Your hand: ${playingState.getHand(secret)}")
-    playingState.getPlays.lastOption match {
+    playingState.plays.lastOption match {
       case Some(play) => println(f"Last play by player ${play._1}: ${play._2}")
       case None => println("Play anything")
     }
@@ -31,10 +31,10 @@ class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
     readToUpper match {
       case "PASS" => None
       case "INFO" =>
-        println(f"Landlord is player ${playingState.getLandlord}")
+        println(f"Landlord is player ${playingState.landlord}")
         getAction(playingState)
       case "PLAYS" =>
-        playingState.getPlays.foreach((p) => println(f"Player ${p._1}: ${p._2}"))
+        playingState.plays.foreach((p) => println(f"Player ${p._1}: ${p._2}"))
         getAction(playingState)
       case input =>
         val selections = input.split(" ").filter(_.nonEmpty).map(_.trim)
