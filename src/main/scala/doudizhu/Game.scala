@@ -6,7 +6,7 @@ case class Game(state: State, agents: List[Agent], currentAgent: Agent, turn: In
   require(agents.size == 3)
   require(agents.contains(currentAgent))
 
-  protected val nextPlayer: Agent =
+  protected val nextAgent: Agent =
     agents((agents.indexWhere(_ == currentAgent) + 1) % agents.size)
 }
 
@@ -25,16 +25,16 @@ object Game {
 
   def loop(game: Game): Unit = {
     val currentAgent = game.currentAgent
-    val newState: State = game.state match {
+    val (nextState, nextAgent): (State, Agent) = game.state match {
       case auctionState: AuctionState =>
         if (currentAgent.getAction(auctionState))
-          auctionState.setLandlord(currentAgent.secret)
+          (auctionState.setLandlord(currentAgent.secret), currentAgent)
         else if (game.turn == 2)
-          auctionState.setLandlord(game.nextPlayer.secret)
+          (auctionState.setLandlord(game.nextAgent.secret), game.nextAgent)
         else
-          auctionState
+          (auctionState, game.nextAgent)
       case playingState: PlayingState =>
-        playingState.getWinner match {
+        playingState.winner match {
           case Some(winner) =>
             if (winner == playingState.landlord)
               println(f"Landlord player $winner won!")
@@ -42,12 +42,12 @@ object Game {
               println(f"Peasant player $winner won!")
             return
           case None =>
-            currentAgent.getAction(playingState) match {
+            (currentAgent.getAction(playingState) match {
               case Some(play) => playingState.play(currentAgent.secret, play)
               case None => playingState
-            }
+            }, game.nextAgent)
         }
     }
-    loop(Game(newState, game.agents, game.nextPlayer, game.turn + 1))
+    loop(Game(nextState, game.agents, nextAgent, game.turn + 1))
   }
 }
