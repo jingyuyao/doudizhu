@@ -6,8 +6,7 @@ case class Game(state: State, agents: List[Agent], currentAgent: Agent, turn: In
   require(agents.size == 3)
   require(agents.contains(currentAgent))
 
-  protected val nextAgent: Agent =
-    agents((agents.indexWhere(_ == currentAgent) + 1) % agents.size)
+  val nextAgent: Agent = agents((agents.indexWhere(_ == currentAgent) + 1) % agents.size)
 }
 
 object Game {
@@ -18,7 +17,7 @@ object Game {
     val (chest, restCards) = randomCards.splitAt(3)
     val hands = secrets.zip(restCards.grouped(17).map((cards) => Cards(cards.toSet)).toList).toMap
     val secretIdMap = agents.map(a => (a.secret, a.id)).toMap
-    val initState = AuctionState(hands, secretIdMap, Cards(chest.toSet))
+    val initState = new AuctionState(secretIdMap, hands, Cards(chest.toSet))
     val initAgent = agents(Random.nextInt(agents.size))
     Game(initState, agents, initAgent, 0)
   }

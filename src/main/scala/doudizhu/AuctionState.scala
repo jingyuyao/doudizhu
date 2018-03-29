@@ -1,8 +1,8 @@
 package doudizhu
 
-case class AuctionState(protected val hands: Map[PlayerSecret, Cards],
-                        protected val secretIdMap: Map[PlayerSecret, PlayerId],
-                        private val chest: Cards) extends State {
+class AuctionState(secretIdMap: Map[PlayerSecret, PlayerId],
+                   hands: Map[PlayerSecret, Cards],
+                   chest: Cards) extends State(secretIdMap, hands) {
   require(chest.set.size == 3)
   require(hands.values.map(_.set.size).forall(_ == 17))
   // Contains exactly one copy of each card.
@@ -15,6 +15,6 @@ case class AuctionState(protected val hands: Map[PlayerSecret, Cards],
   def setLandlord(secret: PlayerSecret): PlayingState = {
     val landlordHand = Cards(getHand(secret).set.union(chest.set))
     val startingHands = hands.updated(secret, landlordHand)
-    PlayingState(startingHands, secretIdMap, getPlayerId(secret), List(), startingHands)
+    new PlayingState(secretIdMap, startingHands, startingHands, getPlayerId(secret), List())
   }
 }

@@ -1,11 +1,11 @@
 package doudizhu
 
 /** A more relaxed version of PlayingState that allows an agent to "play" for other players. */
-case class FakePlayingState(protected val hands: Map[PlayerSecret, Cards],
-                            protected val secretIdMap: Map[PlayerSecret, PlayerId],
-                            landlord: PlayerId,
-                            plays: List[Play],
-                            private val startingHands: Map[PlayerSecret, Cards]) extends State {
+class FakePlayingState(hands: Map[PlayerSecret, Cards],
+                       secretIdMap: Map[PlayerSecret, PlayerId],
+                       startingHands: Map[PlayerSecret, Cards],
+                       val landlord: PlayerId,
+                       val plays: List[Play]) extends State(secretIdMap, hands) {
   // Each play can beat the last one.
   require(
     plays match {
@@ -42,6 +42,6 @@ case class FakePlayingState(protected val hands: Map[PlayerSecret, Cards],
     if (!isValid(id, combo))
       throw new IllegalArgumentException("Invalid play")
 
-    FakePlayingState(hands, secretIdMap, landlord, plays :+ Play(id, combo), startingHands)
+    new FakePlayingState(hands, secretIdMap, startingHands, landlord, plays :+ Play(id, combo))
   }
 }

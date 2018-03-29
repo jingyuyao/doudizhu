@@ -1,10 +1,10 @@
 package doudizhu
 
-case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
-                        protected val secretIdMap: Map[PlayerSecret, PlayerId],
-                        landlord: PlayerId,
-                        plays: List[Play],
-                        private val startingHands: Map[PlayerSecret, Cards]) extends State {
+class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
+                   hands: Map[PlayerSecret, Cards],
+                   startingHands: Map[PlayerSecret, Cards],
+                   val landlord: PlayerId,
+                   val plays: List[Play]) extends State(secretIdMap, hands) {
   // Contains exactly one copy of each card.
   require({
     val cardsInHand = hands.values.map(_.set.toList).fold(List())(_ ++ _)
@@ -45,7 +45,7 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
 
     val newPlayerHand = Cards(hands(secret).set.diff(combo.cards.set))
     val newHands = hands.updated(secret, newPlayerHand)
-    PlayingState(newHands, secretIdMap, landlord, plays :+ Play(getPlayerId(secret), combo), startingHands)
+    new PlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getPlayerId(secret), combo))
   }
 
   def otherCardsInPlay(secret: PlayerSecret): Cards = {
@@ -54,5 +54,5 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
     Cards(Cards.all.set.diff(cardsInPlayerHand).diff(cardsPlayed))
   }
 
-  def toFake: FakePlayingState = FakePlayingState(hands, secretIdMap, landlord, plays, startingHands)
+  def toFake: FakePlayingState = new FakePlayingState(hands, secretIdMap, startingHands, landlord, plays)
 }
