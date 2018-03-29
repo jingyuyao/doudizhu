@@ -1,8 +1,8 @@
 package doudizhu
 
 /** A more relaxed version of PlayingState that allows an agent to "play" for other players. */
-class FakePlayingState(hands: Map[PlayerSecret, Cards],
-                       secretIdMap: Map[PlayerSecret, PlayerId],
+class FakePlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
+                       hands: Map[PlayerSecret, Cards],
                        startingHands: Map[PlayerSecret, Cards],
                        val landlord: PlayerId,
                        val plays: List[Play]) extends State(secretIdMap, hands) {
@@ -38,10 +38,10 @@ class FakePlayingState(hands: Map[PlayerSecret, Cards],
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
-  def play(id: PlayerId, combo: Combo): FakePlayingState = {
+  def fakePlay(id: PlayerId, combo: Combo): FakePlayingState = {
     if (!isValid(id, combo))
       throw new IllegalArgumentException("Invalid play")
 
-    new FakePlayingState(hands, secretIdMap, startingHands, landlord, plays :+ Play(id, combo))
+    new FakePlayingState(secretIdMap, hands, startingHands, landlord, plays :+ Play(id, combo))
   }
 }

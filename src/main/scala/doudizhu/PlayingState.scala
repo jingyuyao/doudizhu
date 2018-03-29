@@ -48,11 +48,18 @@ class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
     new PlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getPlayerId(secret), combo))
   }
 
+  def fakePlay(secret: PlayerSecret, combo: Combo): FakePlayingState = {
+    if (!isValid(secret, combo))
+      throw new IllegalArgumentException("Invalid play")
+
+    val newPlayerHand = Cards(hands(secret).set.diff(combo.cards.set))
+    val newHands = hands.updated(secret, newPlayerHand)
+    new FakePlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getPlayerId(secret), combo))
+  }
+
   def otherCardsInPlay(secret: PlayerSecret): Cards = {
     val cardsInPlayerHand = hands(secret).set
     val cardsPlayed = plays.map(_.combo.cards.set).fold(Set())(_ ++ _)
     Cards(Cards.all.set.diff(cardsInPlayerHand).diff(cardsPlayed))
   }
-
-  def toFake: FakePlayingState = new FakePlayingState(hands, secretIdMap, startingHands, landlord, plays)
 }
