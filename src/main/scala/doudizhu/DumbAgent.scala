@@ -12,10 +12,7 @@ class DumbAgent(override val id: PlayerId, override val secret: PlayerSecret) ex
   override def getAction(playingState: PlayingState): Option[Combo] = {
     val hand = playingState.getHand(secret)
     val combos = Combo.allFrom(hand).sortWith(dumbComboOrdering)
-    playingState.plays.lastOption match {
-      case Some(play) => combos.find(combo => Play(id, combo).canBeat(play))
-      case None => Some(combos.head)
-    }
+    combos.find(combo => playingState.isValid(secret, combo))
   }
 
   private def dumbComboOrdering(l: Combo, r: Combo): Boolean =
