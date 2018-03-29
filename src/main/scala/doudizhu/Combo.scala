@@ -30,7 +30,19 @@ case class Combo(cards: Cards, kind: ComboKind, value: Int) extends Ordered[Comb
 }
 
 object Combo {
-  def maybeCreate(cards: Cards): Option[Combo] = {
+  /** Return a sorted list of all possible combos from this set of cards. */
+  def allFrom(cards: Cards): List[Combo] = {
+    val groupedByCardValue = cards.set.groupBy(_.value).values
+    // Covers SINGLE, PAIR, TRIPLET, BOMB and ROCKET
+    val combosWithSameCardValue = groupedByCardValue.flatMap(_.subsets()).flatMap(s => Combo.from(Cards(s)))
+    val oneOfEachCardValue = groupedByCardValue.map(_.head).foldLeft(Set[Card]())(_ + _)
+    val possibleSequenceSets = (5 until oneOfEachCardValue.size).flatMap(l => oneOfEachCardValue.subsets(l))
+    val sequences = possibleSequenceSets.flatMap(s => Combo.from(Cards(s)))
+    (combosWithSameCardValue ++ sequences).toList.sorted
+  }
+
+  /** Return a combo if one can be created from this exact set of cards. */
+  def from(cards: Cards): Option[Combo] = {
     // Values can have duplicates
     val values: List[Int] = cards.set.toList.map(_.value)
     val sameValue: Boolean = values.forall(_ == values.head)
@@ -41,9 +53,7 @@ object Combo {
       case 3 if sameValue => Some(TRIPLET)
       case 4 if sameValue => Some(BOMB)
       case x if x >= 5 =>
-        val max = values.max
-        val min = values.min
-        val inSequence = max - min == values.size - 1 && values.toSet == (min to max).toSet
+        val inSequence = cards.sorted.sliding(2).forall({ case List(left, right) => right.value - left.value == 1 })
         val noTwos = cards.set.intersect(Cards.all("2").set).isEmpty
         val noJokers = cards.set.intersect(Cards.jokers.set).isEmpty
         if (inSequence && noTwos && noJokers)
@@ -53,7 +63,7 @@ object Combo {
       case _ => None
     }
     maybeKind match {
-      case Some(kind) => Some(Combo(cards, kind, values.sum))
+      case Some(kind) => Some(Combo(cards, kind, values.sum / values.size))
       case None => None
     }
   }

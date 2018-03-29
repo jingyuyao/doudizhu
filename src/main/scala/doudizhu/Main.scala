@@ -2,12 +2,12 @@ package doudizhu
 
 import scala.util.Random
 
-object DouDiZhu {
+object Main {
   def main(args: Array[String]): Unit = {
     val agents = List(
       new HumanAgent(0, Random.nextString(10)),
-      new HumanAgent(1, Random.nextString(10)),
-      new HumanAgent(2, Random.nextString(10))
+      new DumbAgent(1, Random.nextString(10)),
+      new DumbAgent(2, Random.nextString(10))
     )
     Game.loop(Game.create(agents))
   }

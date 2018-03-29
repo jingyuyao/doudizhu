@@ -2,7 +2,7 @@ package doudizhu
 
 import scala.io.StdIn.readLine
 
-class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
+class HumanAgent(override val id: PlayerId, override val secret: PlayerSecret) extends Agent(id, secret) {
   private val bannerSize = 40
 
   /** Returns whether to become the landlord. */
@@ -47,7 +47,7 @@ class HumanAgent(val id: PlayerId, val secret: PlayerSecret) extends Agent {
         val selections = input.split(" ").filter(_.nonEmpty).map(_.trim)
         val hand = playingState.getHand(secret)
         val selectedCards = hand(selections: _*)
-        Combo.maybeCreate(selectedCards) match {
+        Combo.from(selectedCards) match {
           case Some(play) =>
             if (playingState.isValid(secret, play)) {
               print(f"Play $play? [Y/N] ")
