@@ -1,22 +1,30 @@
 package doudizhu
 
-import doudizhu.PlayKind._
+object ComboKind extends Enumeration {
+  type ComboKind = Value
+  val SINGLE, PAIR, TRIPLET, SEQUENCE, BOMB, ROCKET = Value
+}
 
-case class Combo(cards: Cards, kind: PlayKind, value: Int) {
-  def canBeat(that: Combo): Boolean = {
+import doudizhu.ComboKind._
+
+case class Combo(cards: Cards, kind: ComboKind, value: Int) extends Ordered[Combo] {
+  override def compare(that: Combo): Int =
     kind match {
       // Rocket can beat everything
-      case ROCKET => true
+      case ROCKET => 1
       // Bomb can be everything except for a rocket or a higher bomb
       case BOMB => that.kind match {
-        case ROCKET => false
-        case BOMB => value > that.value
-        case _ => true
+        case ROCKET => -1
+        case BOMB => value - that.value
+        case _ => 1
       }
       // Otherwise the play can only beat another play of the same kind and lower value
-      case _ => kind == that.kind && cards.set.size == that.cards.set.size && value > that.value
+      case _ =>
+        if (kind == that.kind && cards.set.size == that.cards.set.size)
+          value - that.value
+        else
+          -1
     }
-  }
 
   override def toString: String = f"$kind $cards"
 }
@@ -26,7 +34,7 @@ object Combo {
     // Values can have duplicates
     val values: List[Int] = cards.set.toList.map(_.value)
     val sameValue: Boolean = values.forall(_ == values.head)
-    val maybeKind: Option[PlayKind] = cards.set.size match {
+    val maybeKind: Option[ComboKind] = cards.set.size match {
       case 1 => Some(SINGLE)
       case 2 if cards == Cards.jokers => Some(ROCKET)
       case 2 if sameValue => Some(PAIR)

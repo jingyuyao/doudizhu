@@ -1,7 +1,7 @@
 package doudizhu
 
 import doudizhu.Cards.{all, jokers}
-import doudizhu.PlayKind._
+import doudizhu.ComboKind._
 import org.scalatest.FlatSpec
 
 class ComboSpec extends FlatSpec {
@@ -58,15 +58,15 @@ class ComboSpec extends FlatSpec {
   "4 to 8" should "beat 3 to 7" in {
     val threeToSeven = Combo.maybeCreate(all("3+", "4+", "5+", "6+", "7+")).get
     val fourToEight = Combo.maybeCreate(all("4+", "5+", "6+", "7+", "8+")).get
-    assert(fourToEight.canBeat(threeToSeven))
-    assert(!threeToSeven.canBeat(fourToEight))
+    assert(fourToEight > threeToSeven)
+    assert(threeToSeven < fourToEight)
   }
 
   "3 to 8" should "not beat 3 to 7" in {
     val threeToEight = Combo.maybeCreate(all("3+", "4+", "5+", "6+", "7+", "8+")).get
     val threeToSeven = Combo.maybeCreate(all("3+", "4+", "5+", "6+", "7+")).get
-    assert(!threeToSeven.canBeat(threeToEight))
-    assert(!threeToEight.canBeat(threeToSeven))
+    assert(threeToSeven < threeToEight)
+    assert(threeToEight < threeToSeven)
   }
 
   "Rocket" should "beat everything" in {
@@ -76,11 +76,12 @@ class ComboSpec extends FlatSpec {
     val triplet = Combo.maybeCreate(all("A").take(3)).get
     val bomb = Combo.maybeCreate(all("A").take(4)).get
     val sequence = Combo.maybeCreate(all("3+", "4+", "5+", "6+", "7+")).get
-    assert(rocket.canBeat(single))
-    assert(rocket.canBeat(double))
-    assert(rocket.canBeat(triplet))
-    assert(rocket.canBeat(bomb))
-    assert(rocket.canBeat(single))
+    assert(rocket > single)
+    assert(rocket > double)
+    assert(rocket > triplet)
+    assert(rocket > bomb)
+    assert(rocket > single)
+    assert(rocket > sequence)
   }
 
   "Bomb" should "beat everything except for rocket" in {
@@ -91,11 +92,12 @@ class ComboSpec extends FlatSpec {
     val bomb = Combo.maybeCreate(all("A").take(4)).get
     val bomb2 = Combo.maybeCreate(all("2").take(4)).get
     val sequence = Combo.maybeCreate(all("3+", "4+", "5+", "6+", "7+")).get
-    assert(!bomb.canBeat(rocket))
-    assert(bomb.canBeat(double))
-    assert(bomb.canBeat(triplet))
-    assert(!bomb.canBeat(bomb2))
-    assert(bomb2.canBeat(bomb))
-    assert(bomb.canBeat(single))
+    assert(bomb < rocket)
+    assert(bomb > double)
+    assert(bomb > triplet)
+    assert(bomb < bomb2)
+    assert(bomb2 > bomb)
+    assert(bomb > single)
+    assert(bomb > sequence)
   }
 }

@@ -24,9 +24,6 @@ trait Playing extends State {
     val cardsPlayed = plays.map(_.combo.cards.set).fold(Set())(_ ++ _)
     Cards(Cards.all.set.diff(cardsInPlayerHand).diff(cardsPlayed))
   }
-
-  protected def canBeat(newPlay: Play, lastPlay: Play): Boolean =
-    lastPlay.id == newPlay.id || newPlay.combo.canBeat(lastPlay.combo)
 }
 
 case class AuctionState(protected val hands: Map[PlayerSecret, Cards],
@@ -73,14 +70,14 @@ case class PlayingState(protected val hands: Map[PlayerSecret, Cards],
     plays match {
       case Seq() => true
       case Seq(_) => true
-      case _ => plays.sliding(2).forall({ case List(left, right) => canBeat(right, left) })
+      case _ => plays.sliding(2).forall({ case List(left, right) => right > left })
     }
   )
 
   def isValid(secret: PlayerSecret, combo: Combo): Boolean = {
     val playerOwnsPlay = combo.cards.set.subsetOf(hands(secret).set)
     val beatLastPlay = plays.lastOption match {
-      case Some(lastPlay) => canBeat(Play(getPlayerId(secret), combo), lastPlay)
+      case Some(lastPlay) => Play(getPlayerId(secret), combo) > lastPlay
       case None => true
     }
     winner.isEmpty && playerOwnsPlay && beatLastPlay
@@ -110,7 +107,7 @@ case class FakePlayingState(protected val hands: Map[PlayerSecret, Cards],
     plays match {
       case Seq() => true
       case Seq(_) => true
-      case _ => plays.sliding(2).forall({ case List(left, right) => canBeat(right, left) })
+      case _ => plays.sliding(2).forall({ case List(left, right) => right > left })
     }
   )
 
@@ -128,18 +125,19 @@ case class FakePlayingState(protected val hands: Map[PlayerSecret, Cards],
     throw new IllegalStateException("You should not rely on hand data in a fake state")
 
   def isValid(id: PlayerId, combo: Combo): Boolean = {
+    val playerHasEnoughCards = numCardsInHand(id) >= combo.cards.set.size
     val beatLastPlay = plays.lastOption match {
-      case Some(lastPlay) => canBeat(Play(id, combo), lastPlay)
+      case Some(lastPlay) => Play(id, combo) > lastPlay
       case None => true
     }
-    winner.isEmpty && beatLastPlay
+    winner.isEmpty && playerHasEnoughCards && beatLastPlay
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
-  def play(id: PlayerId, combo: Combo): PlayingState = {
+  def play(id: PlayerId, combo: Combo): FakePlayingState = {
     if (!isValid(id, combo))
       throw new IllegalArgumentException("Invalid play")
 
-    PlayingState(hands, secretIdMap, landlord, plays :+ Play(id, combo), startingHands)
+    FakePlayingState(hands, secretIdMap, landlord, plays :+ Play(id, combo), startingHands)
   }
 }
