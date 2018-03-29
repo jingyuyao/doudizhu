@@ -25,14 +25,14 @@ class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
     plays match {
       case Seq() => true
       case Seq(_) => true
-      case _ => plays.sliding(2).forall({ case List(left, right) => right > left })
+      case _ => plays.sliding(2).forall({ case List(left, right) => right.canBeat(left) })
     }
   )
 
   def isValid(secret: PlayerSecret, combo: Combo): Boolean = {
     val playerOwnsPlay = combo.cards.set.subsetOf(hands(secret).set)
     val beatLastPlay = plays.lastOption match {
-      case Some(lastPlay) => Play(getPlayerId(secret), combo) > lastPlay
+      case Some(lastPlay) => Play(getPlayerId(secret), combo).canBeat(lastPlay)
       case None => true
     }
     winner.isEmpty && playerOwnsPlay && beatLastPlay

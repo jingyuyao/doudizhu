@@ -7,30 +7,26 @@ object ComboKind extends Enumeration {
 
 import doudizhu.ComboKind._
 
-case class Combo(cards: Cards, kind: ComboKind, value: Int) extends Ordered[Combo] {
-  override def compare(that: Combo): Int =
+case class Combo(cards: Cards, kind: ComboKind, value: Int) {
+  def canBeat(that: Combo): Boolean =
     kind match {
       // Rocket can beat everything
-      case ROCKET => 1
+      case ROCKET => true
       // Bomb can be everything except for a rocket or a higher bomb
       case BOMB => that.kind match {
-        case ROCKET => -1
-        case BOMB => value - that.value
-        case _ => 1
+        case ROCKET => false
+        case BOMB => value > that.value
+        case _ => true
       }
       // Otherwise the play can only beat another play of the same kind and lower value
-      case _ =>
-        if (kind == that.kind && cards.set.size == that.cards.set.size)
-          value - that.value
-        else
-          -1
+      case _ => kind == that.kind && cards.set.size == that.cards.set.size && value > that.value
     }
 
   override def toString: String = f"$kind $cards"
 }
 
 object Combo {
-  /** Return a sorted list of all possible combos from this set of cards. */
+  /** Return a list of all possible combos from this set of cards. */
   def allFrom(cards: Cards): List[Combo] = {
     val groupedByCardValue = cards.set.groupBy(_.value).values
     // Covers SINGLE, PAIR, TRIPLET, BOMB and ROCKET
@@ -38,7 +34,7 @@ object Combo {
     val oneOfEachCardValue = groupedByCardValue.map(_.head).foldLeft(Set[Card]())(_ + _)
     val possibleSequenceSets = (5 until oneOfEachCardValue.size).flatMap(l => oneOfEachCardValue.subsets(l))
     val sequences = possibleSequenceSets.flatMap(s => Combo.from(Cards(s)))
-    (combosWithSameCardValue ++ sequences).toList.sorted
+    (combosWithSameCardValue ++ sequences).toList
   }
 
   /** Return a combo if one can be created from this exact set of cards. */

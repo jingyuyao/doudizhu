@@ -11,7 +11,7 @@ class FakePlayingState(hands: Map[PlayerSecret, Cards],
     plays match {
       case Seq() => true
       case Seq(_) => true
-      case _ => plays.sliding(2).forall({ case List(left, right) => right > left })
+      case _ => plays.sliding(2).forall({ case List(left, right) => right.canBeat(left) })
     }
   )
 
@@ -31,7 +31,7 @@ class FakePlayingState(hands: Map[PlayerSecret, Cards],
   def isValid(id: PlayerId, combo: Combo): Boolean = {
     val playerHasEnoughCards = numCardsInHand(id) >= combo.cards.set.size
     val beatLastPlay = plays.lastOption match {
-      case Some(lastPlay) => Play(id, combo) > lastPlay
+      case Some(lastPlay) => Play(id, combo).canBeat(lastPlay)
       case None => true
     }
     winner.isEmpty && playerHasEnoughCards && beatLastPlay
