@@ -3,13 +3,8 @@ package doudizhu
 import scala.io.StdIn.readLine
 
 class HumanAgent(override val id: PlayerId, override val secret: PlayerSecret) extends Agent(id, secret) {
-  private val bannerSize = 40
-
   /** Returns whether to become the landlord. */
   override def getAction(auctionState: AuctionState): Boolean = {
-    println("-" * bannerSize)
-    println("Auctioning...")
-    println(f"You are player ${auctionState.getPlayerId(secret)}")
     println(f"Your hand: ${auctionState.getHand(secret)}")
     print("Accept landlord? [Y/N] ")
     readToUpper match {
@@ -23,18 +18,11 @@ class HumanAgent(override val id: PlayerId, override val secret: PlayerSecret) e
 
   /** Returns the play to make, None to pass. */
   override def getAction(playingState: PlayingState): Option[Combo] = {
-    println("-" * bannerSize)
-    println(f"You are player ${playingState.getPlayerId(secret)}")
-    playingState.plays.lastOption match {
-      case Some(play) => println(f"Player ${play.id} last played ${play.combo}")
-      case None => println("Play anything")
-    }
     println(f"Your hand: ${playingState.getHand(secret)}")
     print("Your action: [PASS/INFO/PLAYS/Cards to play] ")
     readToUpper match {
       case "PASS" => None
       case "INFO" =>
-        println("*" * bannerSize)
         println(f"Landlord is player ${playingState.landlord}")
         playingState.numCardsInHand.toList.sortBy(_._1)
           .foreach({ case (i, n) => println(f"Player $i has $n cards") })
