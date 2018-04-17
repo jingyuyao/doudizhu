@@ -12,6 +12,9 @@ class AuctionState(secretIdMap: Map[AgentSecret, AgentId],
     Cards.all.set.size == cardsInState.size && Cards.all.set == cardsInState.toSet
   })
 
+  override def otherCardsInPlay(agentSecret: AgentSecret): Cards =
+    Cards(super.otherCardsInPlay(agentSecret).set ++ chest.set)
+
   def setLandlord(secret: AgentSecret): PlayingState = {
     val landlordHand = Cards(getHand(secret).set.union(chest.set))
     val startingHands = hands.updated(secret, landlordHand)
