@@ -30,21 +30,21 @@ class PlayingState(secretIdMap: Map[AgentSecret, AgentId],
   })
 
   def isValid(agentSecret: AgentSecret, combo: Combo): Boolean = {
-    val playerOwnsPlay = combo.cards.set.subsetOf(hands(agentSecret).set)
+    val agentOwnsPlay = combo.cards.set.subsetOf(hands(agentSecret).set)
     val beatLastPlay = plays.lastOption match {
       case Some(lastPlay) => Play(getAgentId(agentSecret), combo).canBeat(lastPlay)
       case None => true
     }
-    getWinner.isEmpty && playerOwnsPlay && beatLastPlay
+    getWinner.isEmpty && agentOwnsPlay && beatLastPlay
   }
 
-  /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
+  /** Make a new play from the given agent. It is up to the caller to ensure it is a valid play */
   def play(agentSecret: AgentSecret, combo: Combo): PlayingState = {
     if (!isValid(agentSecret, combo))
       throw new IllegalArgumentException("Invalid play")
 
-    val newPlayerHand = Cards(hands(agentSecret).set.diff(combo.cards.set))
-    val newHands = hands.updated(agentSecret, newPlayerHand)
+    val newAgentHand = Cards(hands(agentSecret).set.diff(combo.cards.set))
+    val newHands = hands.updated(agentSecret, newAgentHand)
     new PlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getAgentId(agentSecret), combo))
   }
 

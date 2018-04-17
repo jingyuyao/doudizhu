@@ -23,13 +23,13 @@ class HumanAgent(agentId: AgentId, agentSecret: AgentSecret) extends Agent(agent
     readToUpper match {
       case "PASS" => None
       case "INFO" =>
-        println(f"Landlord is player ${playingState.landlord}")
+        println(f"Landlord is agent ${playingState.landlord}")
         playingState.getNumCardsInHand.toList.sortBy(_._1)
-          .foreach({ case (i, n) => println(f"Player $i has $n cards") })
+          .foreach({ case (i, n) => println(f"Agent $i has $n cards") })
         println(f"Unseen cards: ${playingState.otherCardsInPlay(agentSecret)}")
         getAction(playingState)
       case "PLAYS" =>
-        playingState.plays.foreach((p) => println(f"Player ${p.agentId}: ${p.combo}"))
+        playingState.plays.foreach((p) => println(f"Agent ${p.agentId}: ${p.combo}"))
         getAction(playingState)
       case input =>
         val selections = input.split(" ").filter(_.nonEmpty).map(_.trim)

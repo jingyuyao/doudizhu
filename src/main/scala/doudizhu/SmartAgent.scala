@@ -18,8 +18,8 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
     if (successors.isEmpty) {
       None
     } else {
-      val otherPlayers = getOtherPlayersInOrder(fakePlayingState)
-      val comboValues = successors.map({ case (combo, state) => (combo, minValue(state, 0, otherPlayers)) })
+      val otherAgents = getOtherAgentsInOrder(fakePlayingState)
+      val comboValues = successors.map({ case (combo, state) => (combo, minValue(state, 0, otherAgents)) })
       Some(comboValues.maxBy(_._2)._1)
     }
   }
@@ -29,22 +29,22 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
       eval(fakePlayingState)
     } else {
       val successorStates = getSuccessorStates(fakePlayingState, agentId)
-      val otherPlayers = getOtherPlayersInOrder(fakePlayingState)
-      val minValues = successorStates.map(state => minValue(state, currentDepth, otherPlayers)) :+ Double.NegativeInfinity
+      val otherAgents = getOtherAgentsInOrder(fakePlayingState)
+      val minValues = successorStates.map(state => minValue(state, currentDepth, otherAgents)) :+ Double.NegativeInfinity
       minValues.max
     }
 
-  private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherPlayers: List[AgentId]): Double =
+  private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherAgents: List[AgentId]): Double =
     if (isTerminal(fakePlayingState, currentDepth)) {
       eval(fakePlayingState)
     } else {
       val maxValues =
-        if (otherPlayers.isEmpty) {
+        if (otherAgents.isEmpty) {
           getSuccessorStates(fakePlayingState, agentId)
             .map(state => maxValue(state, currentDepth + 1))
         } else {
-          getSuccessorStates(fakePlayingState, otherPlayers.head)
-            .map(state => minValue(state, currentDepth, otherPlayers.drop(1)))
+          getSuccessorStates(fakePlayingState, otherAgents.head)
+            .map(state => minValue(state, currentDepth, otherAgents.drop(1)))
         }
       if (maxValues.isEmpty)
         Double.PositiveInfinity
@@ -55,23 +55,23 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
   private def isTerminal(fakePlayingState: FakePlayingState, currentDepth: Int): Boolean =
     fakePlayingState.getWinner.nonEmpty || currentDepth == maxDepth
 
-  private def getSuccessorStates(fakePlayingState: FakePlayingState, playerId: AgentId): List[FakePlayingState] =
-    getValidCombos(fakePlayingState, playerId).map(combo => fakePlayingState.play(playerId, combo))
+  private def getSuccessorStates(fakePlayingState: FakePlayingState, agentId: AgentId): List[FakePlayingState] =
+    getValidCombos(fakePlayingState, agentId).map(combo => fakePlayingState.play(agentId, combo))
 
-  private def getValidCombos(fakePlayingState: FakePlayingState, playerId: AgentId): List[Combo] =
-    if (playerId == agentId) {
+  private def getValidCombos(fakePlayingState: FakePlayingState, agentId: AgentId): List[Combo] =
+    if (agentId == agentId) {
       val hand = fakePlayingState.getHand(agentSecret)
-      Combo.allFrom(hand).filter(combo => fakePlayingState.isValid(playerId, combo))
+      Combo.allFrom(hand).filter(combo => fakePlayingState.isValid(agentId, combo))
     } else {
       val otherCardsInPlay = fakePlayingState.otherCardsInPlay(agentSecret)
-      Combo.allFrom(otherCardsInPlay).filter(combo => fakePlayingState.isValid(playerId, combo))
+      Combo.allFrom(otherCardsInPlay).filter(combo => fakePlayingState.isValid(agentId, combo))
     }
 
-  private def getOtherPlayersInOrder(fakePlayingState: FakePlayingState): List[AgentId] = {
-    val allPlayerIds = fakePlayingState.getAllAgentIds
-    val indexOfAgent = allPlayerIds.indexOf(agentId)
+  private def getOtherAgentsInOrder(fakePlayingState: FakePlayingState): List[AgentId] = {
+    val allAgentIds = fakePlayingState.getAllAgentIds
+    val indexOfAgent = allAgentIds.indexOf(agentId)
     // Assumes round-robin style.
-    allPlayerIds.slice(indexOfAgent + 1, allPlayerIds.size) ++ allPlayerIds.slice(0, indexOfAgent)
+    allAgentIds.slice(indexOfAgent + 1, allAgentIds.size) ++ allAgentIds.slice(0, indexOfAgent)
   }
 
   /** Evaluates the given auction state from this agent's perspective. */
