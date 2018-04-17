@@ -15,7 +15,7 @@ class FakePlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
     }
   )
 
-  override lazy val getNumCardsInHand: Map[PlayerId, Int] = {
+  override def getNumCardsInHand: Map[PlayerId, Int] = {
     val numCardsPlayedByEachPlayer =
       plays.groupBy(_.id).mapValues(l => l.foldLeft(0)((s, p) => s + p.combo.cards.set.size))
 
