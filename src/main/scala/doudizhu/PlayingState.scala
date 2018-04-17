@@ -12,14 +12,6 @@ class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
     val cardsInState = cardsInHand ++ cardsPlayed
     Cards.all.set.size == cardsInState.size && Cards.all.set == cardsInState.toSet
   })
-  // All plays can be derived from their respective owner's hands.
-  require({
-    hands.forall({
-      case (secret, cardsInHand) =>
-        val playedCards = plays.filter(_.id == getPlayerId(secret)).map(_.combo.cards.set).fold(Set())(_ ++ _)
-        cardsInHand.set ++ playedCards == startingHands(secret).set
-    })
-  })
   // Each play can beat the last one.
   require(
     plays match {
@@ -28,6 +20,14 @@ class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
       case _ => plays.sliding(2).forall({ case List(left, right) => right.canBeat(left) })
     }
   )
+  // All plays can be derived from their respective owner's hands.
+  require({
+    hands.forall({
+      case (secret, cardsInHand) =>
+        val playedCards = plays.filter(_.id == getPlayerId(secret)).map(_.combo.cards.set).fold(Set())(_ ++ _)
+        cardsInHand.set ++ playedCards == startingHands(secret).set
+    })
+  })
 
   def isValid(secret: PlayerSecret, combo: Combo): Boolean = {
     val playerOwnsPlay = combo.cards.set.subsetOf(hands(secret).set)
@@ -48,18 +48,9 @@ class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
     new PlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getPlayerId(secret), combo))
   }
 
-  def fakePlay(secret: PlayerSecret, combo: Combo): FakePlayingState = {
-    if (!isValid(secret, combo))
-      throw new IllegalArgumentException("Invalid play")
+  def otherCardsInPlay(secret: PlayerSecret): Cards =
+    Cards(hands.filterKeys(_ != secret).values.flatMap(_.set).toSet)
 
-    val newPlayerHand = Cards(hands(secret).set.diff(combo.cards.set))
-    val newHands = hands.updated(secret, newPlayerHand)
-    new FakePlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getPlayerId(secret), combo))
-  }
-
-  def otherCardsInPlay(secret: PlayerSecret): Cards = {
-    val cardsInPlayerHand = hands(secret).set
-    val cardsPlayed = plays.map(_.combo.cards.set).fold(Set())(_ ++ _)
-    Cards(Cards.all.set.diff(cardsInPlayerHand).diff(cardsPlayed))
-  }
+  def toFake(secret: PlayerSecret): FakePlayingState =
+    new FakePlayingState(secretIdMap, hands, startingHands, secret, landlord, plays)
 }

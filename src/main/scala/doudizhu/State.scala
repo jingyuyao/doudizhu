@@ -2,6 +2,8 @@ package doudizhu
 
 /** Never leak secrets. Prefer storing ID instead of secrets. */
 class State(secretIdMap: Map[PlayerSecret, PlayerId], hands: Map[PlayerSecret, Cards]) {
+  def getAllPlayerIds: List[PlayerId] = secretIdMap.values.toList
+
   def getPlayerId(secret: PlayerSecret): PlayerId = secretIdMap(secret)
 
   def getHand(secret: PlayerSecret): Cards = hands(secret)
