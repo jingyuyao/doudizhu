@@ -4,9 +4,7 @@ package doudizhu
   * A stupid agent that always accepts landlord and always try to beat the last play with the
   * weakest combo possible.
   */
-class DumbAgent(override val id: PlayerId,
-                override val secret: PlayerSecret)
-  extends Agent(id, secret) {
+class DumbAgent(id: PlayerId, secret: PlayerSecret) extends Agent(id, secret) {
   /** Returns whether to become the landlord. */
   override def getAction(auctionState: AuctionState): Boolean = true
 
