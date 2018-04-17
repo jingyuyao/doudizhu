@@ -1,9 +1,9 @@
 package doudizhu
 
-class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
-                   hands: Map[PlayerSecret, Cards],
-                   startingHands: Map[PlayerSecret, Cards],
-                   val landlord: PlayerId,
+class PlayingState(secretIdMap: Map[AgentSecret, AgentId],
+                   hands: Map[AgentSecret, Cards],
+                   startingHands: Map[AgentSecret, Cards],
+                   val landlord: AgentId,
                    val plays: List[Play]) extends State(secretIdMap, hands) {
   // Contains exactly one copy of each card.
   require({
@@ -24,33 +24,30 @@ class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
   require({
     hands.forall({
       case (secret, cardsInHand) =>
-        val playedCards = plays.filter(_.id == getPlayerId(secret)).map(_.combo.cards.set).fold(Set())(_ ++ _)
+        val playedCards = plays.filter(_.agentId == getAgentId(secret)).map(_.combo.cards.set).fold(Set())(_ ++ _)
         cardsInHand.set ++ playedCards == startingHands(secret).set
     })
   })
 
-  def isValid(secret: PlayerSecret, combo: Combo): Boolean = {
-    val playerOwnsPlay = combo.cards.set.subsetOf(hands(secret).set)
+  def isValid(agentSecret: AgentSecret, combo: Combo): Boolean = {
+    val playerOwnsPlay = combo.cards.set.subsetOf(hands(agentSecret).set)
     val beatLastPlay = plays.lastOption match {
-      case Some(lastPlay) => Play(getPlayerId(secret), combo).canBeat(lastPlay)
+      case Some(lastPlay) => Play(getAgentId(agentSecret), combo).canBeat(lastPlay)
       case None => true
     }
     getWinner.isEmpty && playerOwnsPlay && beatLastPlay
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
-  def play(secret: PlayerSecret, combo: Combo): PlayingState = {
-    if (!isValid(secret, combo))
+  def play(agentSecret: AgentSecret, combo: Combo): PlayingState = {
+    if (!isValid(agentSecret, combo))
       throw new IllegalArgumentException("Invalid play")
 
-    val newPlayerHand = Cards(hands(secret).set.diff(combo.cards.set))
-    val newHands = hands.updated(secret, newPlayerHand)
-    new PlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getPlayerId(secret), combo))
+    val newPlayerHand = Cards(hands(agentSecret).set.diff(combo.cards.set))
+    val newHands = hands.updated(agentSecret, newPlayerHand)
+    new PlayingState(secretIdMap, newHands, startingHands, landlord, plays :+ Play(getAgentId(agentSecret), combo))
   }
 
-  def otherCardsInPlay(secret: PlayerSecret): Cards =
-    Cards(hands.filterKeys(_ != secret).values.flatMap(_.set).toSet)
-
-  def toFake(secret: PlayerSecret): FakePlayingState =
+  def toFake(secret: AgentSecret): FakePlayingState =
     new FakePlayingState(secretIdMap, hands, startingHands, secret, landlord, plays)
 }

@@ -5,16 +5,16 @@ import scala.util.Random
 /**
   * A smart agent that uses Expectimax and various heuristics to find the best action.
   */
-class SmartAgent(id: PlayerId, secret: PlayerSecret, maxDepth: Int = 1) extends Agent(id, secret) {
+class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) extends Agent(agentId, agentSecret) {
   /** Returns whether to become the landlord. */
   override def getAction(auctionState: AuctionState): Boolean = eval(auctionState) > 0.5
 
   /** Returns the play to make, None to pass. */
   override def getAction(playingState: PlayingState): Option[Combo] = {
-    val fakePlayingState = playingState.toFake(secret)
+    val fakePlayingState = playingState.toFake(agentSecret)
     val successors =
-      getValidCombos(fakePlayingState, id)
-        .map(combo => (combo, fakePlayingState.play(id, combo)))
+      getValidCombos(fakePlayingState, agentId)
+        .map(combo => (combo, fakePlayingState.play(agentId, combo)))
     if (successors.isEmpty) {
       None
     } else {
@@ -28,19 +28,19 @@ class SmartAgent(id: PlayerId, secret: PlayerSecret, maxDepth: Int = 1) extends 
     if (isTerminal(fakePlayingState, currentDepth)) {
       eval(fakePlayingState)
     } else {
-      val successorStates = getSuccessorStates(fakePlayingState, id)
+      val successorStates = getSuccessorStates(fakePlayingState, agentId)
       val otherPlayers = getOtherPlayersInOrder(fakePlayingState)
       val minValues = successorStates.map(state => minValue(state, currentDepth, otherPlayers)) :+ Double.NegativeInfinity
       minValues.max
     }
 
-  private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherPlayers: List[PlayerId]): Double =
+  private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherPlayers: List[AgentId]): Double =
     if (isTerminal(fakePlayingState, currentDepth)) {
       eval(fakePlayingState)
     } else {
       val maxValues =
         if (otherPlayers.isEmpty) {
-          getSuccessorStates(fakePlayingState, id)
+          getSuccessorStates(fakePlayingState, agentId)
             .map(state => maxValue(state, currentDepth + 1))
         } else {
           getSuccessorStates(fakePlayingState, otherPlayers.head)
@@ -55,21 +55,21 @@ class SmartAgent(id: PlayerId, secret: PlayerSecret, maxDepth: Int = 1) extends 
   private def isTerminal(fakePlayingState: FakePlayingState, currentDepth: Int): Boolean =
     fakePlayingState.getWinner.nonEmpty || currentDepth == maxDepth
 
-  private def getSuccessorStates(fakePlayingState: FakePlayingState, playerId: PlayerId): List[FakePlayingState] =
+  private def getSuccessorStates(fakePlayingState: FakePlayingState, playerId: AgentId): List[FakePlayingState] =
     getValidCombos(fakePlayingState, playerId).map(combo => fakePlayingState.play(playerId, combo))
 
-  private def getValidCombos(fakePlayingState: FakePlayingState, playerId: PlayerId): List[Combo] =
-    if (playerId == id) {
-      val hand = fakePlayingState.getHand(secret)
+  private def getValidCombos(fakePlayingState: FakePlayingState, playerId: AgentId): List[Combo] =
+    if (playerId == agentId) {
+      val hand = fakePlayingState.getHand(agentSecret)
       Combo.allFrom(hand).filter(combo => fakePlayingState.isValid(playerId, combo))
     } else {
-      val otherCardsInPlay = fakePlayingState.otherCardsInPlay(secret)
+      val otherCardsInPlay = fakePlayingState.otherCardsInPlay(agentSecret)
       Combo.allFrom(otherCardsInPlay).filter(combo => fakePlayingState.isValid(playerId, combo))
     }
 
-  private def getOtherPlayersInOrder(fakePlayingState: FakePlayingState): List[PlayerId] = {
-    val allPlayerIds = fakePlayingState.getAllPlayerIds
-    val indexOfAgent = allPlayerIds.indexOf(id)
+  private def getOtherPlayersInOrder(fakePlayingState: FakePlayingState): List[AgentId] = {
+    val allPlayerIds = fakePlayingState.getAllAgentIds
+    val indexOfAgent = allPlayerIds.indexOf(agentId)
     // Assumes round-robin style.
     allPlayerIds.slice(indexOfAgent + 1, allPlayerIds.size) ++ allPlayerIds.slice(0, indexOfAgent)
   }

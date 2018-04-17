@@ -4,15 +4,15 @@ package doudizhu
   * A stupid agent that always accepts landlord and always try to beat the last play with the
   * weakest combo possible.
   */
-class DumbAgent(id: PlayerId, secret: PlayerSecret) extends Agent(id, secret) {
+class DumbAgent(agentId: AgentId, agentSecret: AgentSecret) extends Agent(agentId, agentSecret) {
   /** Returns whether to become the landlord. */
   override def getAction(auctionState: AuctionState): Boolean = true
 
   /** Returns the play to make, None to pass. */
   override def getAction(playingState: PlayingState): Option[Combo] = {
-    val hand = playingState.getHand(secret)
+    val hand = playingState.getHand(agentSecret)
     val combos = Combo.allFrom(hand).sortWith(dumbComboOrdering)
-    combos.find(combo => playingState.isValid(secret, combo))
+    combos.find(combo => playingState.isValid(agentSecret, combo))
   }
 
   private def dumbComboOrdering(l: Combo, r: Combo): Boolean =

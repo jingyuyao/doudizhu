@@ -1,6 +1,6 @@
 package object doudizhu {
-  /** Opaque ID of a player. */
-  type PlayerId = Int
-  /** Secret used get private states related to a player. */
-  type PlayerSecret = String
+  /** Opaque ID of an agent. */
+  type AgentId = Int
+  /** Secret used get private states related to an agent. */
+  type AgentSecret = String
 }

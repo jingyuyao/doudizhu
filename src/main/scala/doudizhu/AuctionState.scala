@@ -1,7 +1,7 @@
 package doudizhu
 
-class AuctionState(secretIdMap: Map[PlayerSecret, PlayerId],
-                   hands: Map[PlayerSecret, Cards],
+class AuctionState(secretIdMap: Map[AgentSecret, AgentId],
+                   hands: Map[AgentSecret, Cards],
                    chest: Cards) extends State(secretIdMap, hands) {
   require(chest.set.size == 3)
   require(hands.values.map(_.set.size).forall(_ == 17))
@@ -12,9 +12,9 @@ class AuctionState(secretIdMap: Map[PlayerSecret, PlayerId],
     Cards.all.set.size == cardsInState.size && Cards.all.set == cardsInState.toSet
   })
 
-  def setLandlord(secret: PlayerSecret): PlayingState = {
+  def setLandlord(secret: AgentSecret): PlayingState = {
     val landlordHand = Cards(getHand(secret).set.union(chest.set))
     val startingHands = hands.updated(secret, landlordHand)
-    new PlayingState(secretIdMap, startingHands, startingHands, getPlayerId(secret), List())
+    new PlayingState(secretIdMap, startingHands, startingHands, getAgentId(secret), List())
   }
 }

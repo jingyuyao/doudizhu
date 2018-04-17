@@ -1,5 +1,5 @@
 package doudizhu
 
-case class Play(id: PlayerId, combo: Combo) {
-  def canBeat(that: Play): Boolean = id == that.id || combo.canBeat(that.combo)
+case class Play(agentId: AgentId, combo: Combo) {
+  def canBeat(that: Play): Boolean = agentId == that.agentId || combo.canBeat(that.combo)
 }

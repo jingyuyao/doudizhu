@@ -1,15 +1,18 @@
 package doudizhu
 
 /** Never leak secrets. Prefer storing ID instead of secrets. */
-class State(secretIdMap: Map[PlayerSecret, PlayerId], hands: Map[PlayerSecret, Cards]) {
-  def getAllPlayerIds: List[PlayerId] = secretIdMap.values.toList
+class State(secretIdMap: Map[AgentSecret, AgentId], hands: Map[AgentSecret, Cards]) {
+  def getAllAgentIds: List[AgentId] = secretIdMap.values.toList
 
-  def getPlayerId(secret: PlayerSecret): PlayerId = secretIdMap(secret)
+  def getAgentId(agentSecret: AgentSecret): AgentId = secretIdMap(agentSecret)
 
-  def getHand(secret: PlayerSecret): Cards = hands(secret)
+  def getHand(agentSecret: AgentSecret): Cards = hands(agentSecret)
 
-  def getNumCardsInHand: Map[PlayerId, Int] =
-    hands.map({ case (secret, cards) => (getPlayerId(secret), cards.set.size) })
+  def getNumCardsInHand: Map[AgentId, Int] =
+    hands.map({ case (secret, cards) => (getAgentId(secret), cards.set.size) })
 
-  def getWinner: Option[PlayerId] = getNumCardsInHand.find(_._2 == 0).map(_._1)
+  def otherCardsInPlay(agentSecret: AgentSecret): Cards =
+    Cards(hands.filterKeys(_ != agentSecret).values.flatMap(_.set).toSet)
+
+  def getWinner: Option[AgentId] = getNumCardsInHand.find(_._2 == 0).map(_._1)
 }
