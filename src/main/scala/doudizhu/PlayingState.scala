@@ -35,7 +35,7 @@ class PlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
       case Some(lastPlay) => Play(getPlayerId(secret), combo).canBeat(lastPlay)
       case None => true
     }
-    winner.isEmpty && playerOwnsPlay && beatLastPlay
+    getWinner.isEmpty && playerOwnsPlay && beatLastPlay
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */

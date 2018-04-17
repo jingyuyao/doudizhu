@@ -24,7 +24,7 @@ class HumanAgent(override val id: PlayerId, override val secret: PlayerSecret) e
       case "PASS" => None
       case "INFO" =>
         println(f"Landlord is player ${playingState.landlord}")
-        playingState.numCardsInHand.toList.sortBy(_._1)
+        playingState.getNumCardsInHand.toList.sortBy(_._1)
           .foreach({ case (i, n) => println(f"Player $i has $n cards") })
         println(f"Unseen cards: ${playingState.otherCardsInPlay(secret)}")
         getAction(playingState)

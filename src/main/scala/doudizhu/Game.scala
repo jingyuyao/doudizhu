@@ -52,7 +52,7 @@ object Game {
           case Some(play) => println(f"Last play: ${game.getAgent(play.id)} -> ${play.combo}")
           case None => println("New game")
         }
-        playingState.winner match {
+        playingState.getWinner match {
           case Some(winner) =>
             if (winner == playingState.landlord)
               println(f"Landlord ${game.getAgent(winner)} won!")

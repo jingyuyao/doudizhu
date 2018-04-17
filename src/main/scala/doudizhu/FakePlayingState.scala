@@ -15,7 +15,7 @@ class FakePlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
     }
   )
 
-  override lazy val numCardsInHand: Map[PlayerId, Int] = {
+  override lazy val getNumCardsInHand: Map[PlayerId, Int] = {
     val numCardsPlayedByEachPlayer =
       plays.groupBy(_.id).mapValues(l => l.foldLeft(0)((s, p) => s + p.combo.cards.set.size))
 
@@ -29,12 +29,12 @@ class FakePlayingState(secretIdMap: Map[PlayerSecret, PlayerId],
     throw new IllegalStateException("You should not rely on hand data in a fake state")
 
   def isValid(id: PlayerId, combo: Combo): Boolean = {
-    val playerHasEnoughCards = numCardsInHand(id) >= combo.cards.set.size
+    val playerHasEnoughCards = getNumCardsInHand(id) >= combo.cards.set.size
     val beatLastPlay = plays.lastOption match {
       case Some(lastPlay) => Play(id, combo).canBeat(lastPlay)
       case None => true
     }
-    winner.isEmpty && playerHasEnoughCards && beatLastPlay
+    getWinner.isEmpty && playerHasEnoughCards && beatLastPlay
   }
 
   /** Make a new play from the given player. It is up to the caller to ensure it is a valid play */
