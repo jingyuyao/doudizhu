@@ -55,16 +55,16 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
   private def isTerminal(fakePlayingState: FakePlayingState, currentDepth: Int): Boolean =
     fakePlayingState.getWinner.nonEmpty || currentDepth == maxDepth
 
-  private def getSuccessorStates(fakePlayingState: FakePlayingState, agentId: AgentId): List[FakePlayingState] =
-    getValidCombos(fakePlayingState, agentId).map(combo => fakePlayingState.play(agentId, combo))
+  private def getSuccessorStates(fakePlayingState: FakePlayingState, id: AgentId): List[FakePlayingState] =
+    getValidCombos(fakePlayingState, id).map(combo => fakePlayingState.play(id, combo))
 
-  private def getValidCombos(fakePlayingState: FakePlayingState, agentId: AgentId): List[Combo] =
-    if (agentId == agentId) {
+  private def getValidCombos(fakePlayingState: FakePlayingState, id: AgentId): List[Combo] =
+    if (id == agentId) {
       val hand = fakePlayingState.getHand(agentSecret)
-      Combo.allFrom(hand).filter(combo => fakePlayingState.isValid(agentId, combo))
+      Combo.allFrom(hand).filter(combo => fakePlayingState.isValid(id, combo))
     } else {
       val otherCardsInPlay = fakePlayingState.otherCardsInPlay(agentSecret)
-      Combo.allFrom(otherCardsInPlay).filter(combo => fakePlayingState.isValid(agentId, combo))
+      Combo.allFrom(otherCardsInPlay).filter(combo => fakePlayingState.isValid(id, combo))
     }
 
   private def getOtherAgentsInOrder(fakePlayingState: FakePlayingState): List[AgentId] = {
