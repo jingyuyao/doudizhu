@@ -6,6 +6,8 @@ import scala.util.Random
   * A smart agent that uses Expectimax and various heuristics to find the best action.
   */
 class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) extends Agent(agentId, agentSecret) {
+  private val debug = true
+
   /** Returns whether to become the landlord. */
   override def getAction(auctionState: AuctionState): Boolean = eval(auctionState) > 0.5
 
@@ -25,20 +27,23 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
 
   private def maxValue(fakePlayingState: FakePlayingState, currentDepth: Int): Double =
     if (isTerminal(fakePlayingState, currentDepth)) {
-      println(f"max $currentDepth terminal ")
-      eval(fakePlayingState)
+      val value = eval(fakePlayingState)
+      if (debug) println(f"max $currentDepth $value terminal")
+      value
     } else {
-      println(f"max $currentDepth")
       val successorStates = getSuccessorStates(fakePlayingState, agentId)
       val otherAgents = getOtherAgentsInOrder(fakePlayingState)
       val minValues = successorStates.map(state => minValue(state, currentDepth, otherAgents)) :+ Double.NegativeInfinity
-      minValues.max
+      val value = minValues.max
+      if (debug) println(f"max $currentDepth $value")
+      value
     }
 
   private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherAgents: List[AgentId]): Double =
     if (isTerminal(fakePlayingState, currentDepth)) {
-      println(f"min $currentDepth terminal ")
-      eval(fakePlayingState)
+      val value = eval(fakePlayingState)
+      if (debug) println(f"min $currentDepth $value terminal")
+      value
     } else {
       println(f"min $currentDepth")
       val successorStates = getSuccessorStates(fakePlayingState, otherAgents.head)
@@ -47,14 +52,13 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
           successorStates.map(state => maxValue(state, currentDepth + 1))
         else
           successorStates.map(state => minValue(state, currentDepth, otherAgents.drop(1)))
-      if (maxValues.isEmpty)
-        Double.PositiveInfinity
-      else
-        maxValues.sum / maxValues.size
+      val value = if (maxValues.isEmpty) Double.PositiveInfinity else maxValues.sum / maxValues.size
+      if (debug) println(f"min $currentDepth $value")
+      value
     }
 
   private def isTerminal(fakePlayingState: FakePlayingState, currentDepth: Int): Boolean =
-    fakePlayingState.getWinner.nonEmpty || currentDepth == maxDepth
+    currentDepth == maxDepth || fakePlayingState.getWinner.nonEmpty
 
   private def getSuccessorStates(fakePlayingState: FakePlayingState, id: AgentId): List[FakePlayingState] =
     getValidCombos(fakePlayingState, id).map(combo => fakePlayingState.play(id, combo))
