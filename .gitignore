@@ -1,4 +1,6 @@
 ### Example user template
+logs/
+
 # IntelliJ project files
 .idea
 *.iml
