@@ -10,6 +10,7 @@ import scala.util.Random
   */
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
+                 auctionCutoff: Double = 0.7,
                  maxDepth: Int = 2,
                  maxLayerSize: Int = 4) extends Agent(agentId, agentSecret) {
   private val DEBUG = true
@@ -19,7 +20,7 @@ class SmartAgent(agentId: AgentId,
   private val numAllActions = new AtomicInteger()
 
   /** Returns whether to become the landlord. */
-  override def getAction(auctionState: AuctionState): Boolean = eval(auctionState) > 0.5
+  override def getAction(auctionState: AuctionState): Boolean = eval(auctionState) > auctionCutoff
 
   /** Returns the play to make, None to pass. */
   override def getAction(playingState: PlayingState): Option[Combo] = {
@@ -122,4 +123,18 @@ class SmartAgent(agentId: AgentId,
 
   /** Evaluates the given fake playing state from this agent's perspective. */
   private def eval(fakePlayingState: FakePlayingState): Double = Random.nextDouble()
+
+  private def getCardValueInHandFeature(state: State): Double = ???
+
+  private def getComboValueInHandFeature(state: State): Double = ???
+
+  private def getUnseenCardsValueFeature(state: State): Double = ???
+
+  private def getUnseenComboValueFeature(state: State): Double = ???
+
+  private def getVictoryFeature(fakePlayingState: FakePlayingState): Double =
+    fakePlayingState.getWinner match {
+      case Some(winner) => if (winner == agentId) Double.PositiveInfinity else Double.NegativeInfinity
+      case None => 0.0
+    }
 }
