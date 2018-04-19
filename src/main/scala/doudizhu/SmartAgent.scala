@@ -111,7 +111,7 @@ class SmartAgent(agentId: AgentId,
       if (id == agentId)
         fakePlayingState.getHand(agentSecret)
       else
-        fakePlayingState.otherCardsInPlay(agentSecret)
+        fakePlayingState.getUnseenCards(agentSecret)
     val allActions = Combo.allFrom(availableCards)
     if (DEBUG) numAllActions.addAndGet(allActions.size)
     allActions.par

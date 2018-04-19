@@ -26,7 +26,7 @@ class HumanAgent(agentId: AgentId, agentSecret: AgentSecret) extends Agent(agent
         println(f"Landlord is agent ${playingState.landlord}")
         playingState.getNumCardsInHand.toList.sortBy(_._1)
           .foreach({ case (i, n) => println(f"Agent $i has $n cards") })
-        println(f"Unseen cards: ${playingState.otherCardsInPlay(agentSecret)}")
+        println(f"Unseen cards: ${playingState.getUnseenCards(agentSecret)}")
         getAction(playingState)
       case "PLAYS" =>
         playingState.plays.foreach((p) => println(f"Agent ${p.agentId}: ${p.combo}"))

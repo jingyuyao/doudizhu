@@ -37,8 +37,8 @@ class FakePlayingState(secretIdMap: Map[AgentSecret, AgentId],
       }
       else {
         val hasEnoughCards = getNumCardsInHand(agentId) >= combo.cards.set.size
-        val partOfOtherCards = combo.cards.set.subsetOf(otherCardsInPlay(creatorSecret).set)
-        hasEnoughCards && partOfOtherCards
+        val partOfUnseenCards = combo.cards.set.subsetOf(getUnseenCards(creatorSecret).set)
+        hasEnoughCards && partOfUnseenCards
       }
 
     val beatLastPlay = plays.lastOption match {
@@ -61,22 +61,22 @@ class FakePlayingState(secretIdMap: Map[AgentSecret, AgentId],
       new FakePlayingState(secretIdMap, newHands, startingHands, creatorSecret, landlord, plays :+ Play(agentId, combo))
     } else {
       // LOCAL SIDE EFFECTS!!!
-      var remainingOtherCards = otherCardsInPlay(creatorSecret).set.diff(combo.cards.set).toList
+      var remainingUnseenCards = getUnseenCards(creatorSecret).set.diff(combo.cards.set).toList
       // Populates other agent hands with random cards.
       val newHands = hands.map({ case (secret, hand) =>
         if (secret == creatorSecret) {
           (secret, hand)
         } else if (agentId == creatorId) {
-          val split = remainingOtherCards.splitAt(hand.set.size - combo.cards.set.size)
-          remainingOtherCards = split._2
+          val split = remainingUnseenCards.splitAt(hand.set.size - combo.cards.set.size)
+          remainingUnseenCards = split._2
           (secret, Cards(split._1.toSet))
         } else {
-          val split = remainingOtherCards.splitAt(hand.set.size)
-          remainingOtherCards = split._2
+          val split = remainingUnseenCards.splitAt(hand.set.size)
+          remainingUnseenCards = split._2
           (secret, Cards(split._1.toSet))
         }
       })
-      assert(remainingOtherCards.isEmpty)
+      assert(remainingUnseenCards.isEmpty)
 
       new FakePlayingState(secretIdMap, newHands, startingHands, creatorSecret, landlord, plays :+ Play(agentId, combo))
     }
