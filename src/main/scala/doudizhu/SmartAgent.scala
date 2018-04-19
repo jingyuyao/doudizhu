@@ -9,7 +9,11 @@ import scala.util.Random
 /**
   * A smart agent that uses Expectimax, action pruning and heuristic features to find the best actions.
   */
-class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 2) extends Agent(agentId, agentSecret) {
+class SmartAgent(agentId: AgentId,
+                 agentSecret: AgentSecret,
+                 maxDepth: Int = 2,
+                 maxMaxLayerExpansions: Int = 4,
+                 maxMinLayerExpansions: Int = 2) extends Agent(agentId, agentSecret) {
   private val debug = true
   private val numGetSuccessor = new AtomicInteger()
   private val numSuccessor = new AtomicInteger()
@@ -99,14 +103,18 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 2) 
   }
 
   private def getSmartCombos(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
+    val forSelf = id == agentId
     val availableCards =
-      if (id == agentId)
+      if (forSelf)
         fakePlayingState.getHand(agentSecret)
       else
         fakePlayingState.otherCardsInPlay(agentSecret)
-    val validCombos = Combo.allFrom(availableCards).filter(combo => fakePlayingState.isValid(id, combo)).par
+    val validCombos = Combo.allFrom(availableCards).filter(combo => fakePlayingState.isValid(id, combo))
     // TODO: smart combo pruning
-    validCombos.take(4)
+    val sortedValidCombos = validCombos.sortWith(
+      (l, r) => if (r.canBeat(l)) true else r.kind > l.kind)
+    val maxNumCombos = if (forSelf) maxMaxLayerExpansions else maxMinLayerExpansions
+    sortedValidCombos.take(maxNumCombos).par
   }
 
   /** Evaluates the given auction state from this agent's perspective. */

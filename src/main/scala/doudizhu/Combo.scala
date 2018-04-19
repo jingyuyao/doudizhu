@@ -27,14 +27,14 @@ case class Combo(cards: Cards, kind: ComboKind, value: Int) {
 
 object Combo {
   /** Return a list of all possible combos from this set of cards. */
-  def allFrom(cards: Cards): Iterable[Combo] = {
+  def allFrom(cards: Cards): List[Combo] = {
     val groupedByCardValue = cards.set.groupBy(_.value).values
     // Covers SINGLE, PAIR, TRIPLET, BOMB and ROCKET
     val combosWithSameCardValue = groupedByCardValue.flatMap(_.subsets()).flatMap(s => Combo.from(Cards(s)))
     val oneOfEachCardValue = groupedByCardValue.map(_.head).foldLeft(Set[Card]())(_ + _)
     val possibleSequenceSets = (5 until oneOfEachCardValue.size).flatMap(l => oneOfEachCardValue.subsets(l))
     val sequences = possibleSequenceSets.flatMap(s => Combo.from(Cards(s)))
-    combosWithSameCardValue ++ sequences
+    (combosWithSameCardValue ++ sequences).toList
   }
 
   /** Return a combo if one can be created from this exact set of cards. */
