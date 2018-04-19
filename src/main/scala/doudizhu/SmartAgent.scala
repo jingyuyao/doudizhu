@@ -5,14 +5,12 @@ import java.util.concurrent.atomic.AtomicInteger
 import doudizhu.ComboKind._
 
 import scala.collection.parallel.ParIterable
-import scala.util.Random
 
 /**
   * A smart agent that uses Expectimax, action pruning and heuristic features to find the best actions.
   */
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
-                 auctionCutoff: Double = 0.7,
                  maxDepth: Int = 2,
                  maxLayerSize: Int = 100) extends Agent(agentId, agentSecret) {
   private val DEBUG = true
@@ -24,7 +22,16 @@ class SmartAgent(agentId: AgentId,
   private val numAllActions = new AtomicInteger()
 
   /** Returns whether to become the landlord. */
-  override def getAction(auctionState: AuctionState): Boolean = eval(auctionState) > auctionCutoff
+  override def getAction(auctionState: AuctionState): Boolean = {
+    val hand = auctionState.getHand(agentSecret)
+    val handCombos = Combo.allFrom(hand)
+    val handComboValues = handCombos.map(smartComboValue)
+    val averageHandComboValue = handComboValues.sum.toDouble / handComboValues.size
+
+    if (DEBUG) println(f"    auction combo avg $averageHandComboValue")
+
+    averageHandComboValue > 9
+  }
 
   /** Returns the play to make, None to pass. */
   override def getAction(playingState: PlayingState): Option[Combo] = {
@@ -123,9 +130,6 @@ class SmartAgent(agentId: AgentId,
     allActions.par
   }
 
-  /** Evaluates the given auction state from this agent's perspective. */
-  private def eval(auctionState: AuctionState): Double = Random.nextDouble()
-
   /** Evaluates the given fake playing state from this agent's perspective. */
   private def eval(fakePlayingState: FakePlayingState): Double = {
     if (DEBUG) numEval.incrementAndGet()
@@ -160,7 +164,7 @@ class SmartAgent(agentId: AgentId,
     * - Largest bomb is 52
     * - Two jokers is 29
     *
-    * @return a value between 1 to 100
+    * @return a value between 1 to 100, not distributed evenly
     */
   private def smartComboValue(combo: Combo): Int =
     combo.kind match {
