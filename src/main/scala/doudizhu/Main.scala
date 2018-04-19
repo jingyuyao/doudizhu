@@ -9,6 +9,8 @@ object Main {
       new DumbAgent(1, Random.nextString(10)),
       new SmartAgent(2, Random.nextString(10))
     )
-    Game.loop(Game.create(agents))
+    val initAgentIndex = 0
+//    val initAgentIndex = Random.nextInt(agents.size)
+    Game.loop(Game.create(agents, initAgentIndex))
   }
 }

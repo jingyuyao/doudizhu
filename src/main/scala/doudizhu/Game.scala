@@ -14,7 +14,7 @@ case class Game(state: State, agents: List[Agent], currentAgent: Agent, turn: In
 object Game {
   private val BANNER_SIZE = 40
 
-  def create(agents: List[Agent]): Game = {
+  def create(agents: List[Agent], initAgentIndex: Int): Game = {
     require(agents.size == 3)
     val secrets = agents.map(_.agentSecret)
     val randomCards = Random.shuffle(Cards.all.sorted)
@@ -22,7 +22,7 @@ object Game {
     val hands = secrets.zip(restCards.grouped(17).map((cards) => Cards(cards.toSet)).toList).toMap
     val secretIdMap = agents.map(a => (a.agentSecret, a.agentId)).toMap
     val initState = new AuctionState(secretIdMap, hands, Cards(chest.toSet))
-    val initAgent = agents(Random.nextInt(agents.size))
+    val initAgent = agents(initAgentIndex)
     Game(initState, agents, initAgent, 0)
   }
 
