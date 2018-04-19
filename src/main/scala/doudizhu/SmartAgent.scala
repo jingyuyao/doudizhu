@@ -103,18 +103,21 @@ class SmartAgent(agentId: AgentId,
   }
 
   private def getSmartCombos(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
-    val forSelf = id == agentId
-    val availableCards =
-      if (forSelf)
-        fakePlayingState.getHand(agentSecret)
-      else
-        fakePlayingState.otherCardsInPlay(agentSecret)
-    val validCombos = Combo.allFrom(availableCards).filter(combo => fakePlayingState.isValid(id, combo))
+    val validCombos = getValidCombos(fakePlayingState, id)
     // TODO: smart combo pruning
     val sortedValidCombos = validCombos.sortWith(
       (l, r) => if (r.canBeat(l)) true else r.kind > l.kind)
-    val maxNumCombos = if (forSelf) maxMaxLayerExpansions else maxMinLayerExpansions
+    val maxNumCombos = if (id == agentId) maxMaxLayerExpansions else maxMinLayerExpansions
     sortedValidCombos.take(maxNumCombos).par
+  }
+
+  private def getValidCombos(fakePlayingState: FakePlayingState, id: AgentId): List[Combo] = {
+    val availableCards =
+      if (id == agentId)
+        fakePlayingState.getHand(agentSecret)
+      else
+        fakePlayingState.otherCardsInPlay(agentSecret)
+    Combo.allFrom(availableCards).filter(combo => fakePlayingState.isValid(id, combo))
   }
 
   /** Evaluates the given auction state from this agent's perspective. */

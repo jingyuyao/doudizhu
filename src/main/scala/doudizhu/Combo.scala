@@ -30,10 +30,16 @@ object Combo {
   def allFrom(cards: Cards): List[Combo] = {
     val groupedByCardValue = cards.set.groupBy(_.value).values
     // Covers SINGLE, PAIR, TRIPLET, BOMB and ROCKET
-    val combosWithSameCardValue = groupedByCardValue.flatMap(_.subsets()).flatMap(s => Combo.from(Cards(s)))
-    val oneOfEachCardValue = groupedByCardValue.map(_.head).foldLeft(Set[Card]())(_ + _)
-    val possibleSequenceSets = (5 until oneOfEachCardValue.size).flatMap(l => oneOfEachCardValue.subsets(l))
-    val sequences = possibleSequenceSets.flatMap(s => Combo.from(Cards(s)))
+    val combosWithSameCardValue =
+      groupedByCardValue
+        .flatMap(cards => (1 to cards.size).map(cards.take))
+        .flatMap(s => Combo.from(Cards(s)))
+    val oneOfEachCardValueSorted = groupedByCardValue.map(_.head).toList.sorted
+    // Covers SEQUENCE
+    val sequences =
+      (5 to oneOfEachCardValueSorted.size)
+        .flatMap(l => oneOfEachCardValueSorted.sliding(l).filter(_.size == l))
+        .flatMap(l => Combo.from(Cards(l.toSet)))
     (combosWithSameCardValue ++ sequences).toList
   }
 
