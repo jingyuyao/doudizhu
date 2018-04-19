@@ -2,6 +2,8 @@ package doudizhu
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import doudizhu.ComboKind._
+
 import scala.collection.parallel.ParIterable
 import scala.util.Random
 
@@ -12,9 +14,11 @@ class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
                  auctionCutoff: Double = 0.7,
                  maxDepth: Int = 2,
-                 maxLayerSize: Int = 4) extends Agent(agentId, agentSecret) {
+                 maxLayerSize: Int = 100) extends Agent(agentId, agentSecret) {
   private val DEBUG = true
+  private val VERBOSE = false
   private val numGetSuccessor = new AtomicInteger()
+  private val numEval = new AtomicInteger()
   private val numSmartActions = new AtomicInteger()
   private val numLegalActions = new AtomicInteger()
   private val numAllActions = new AtomicInteger()
@@ -27,6 +31,7 @@ class SmartAgent(agentId: AgentId,
     val startTime = System.nanoTime()
     if (DEBUG) {
       numGetSuccessor.set(0)
+      numEval.set(0)
       numSmartActions.set(0)
       numLegalActions.set(0)
       numAllActions.set(0)
@@ -43,9 +48,9 @@ class SmartAgent(agentId: AgentId,
         None
       }
     if (DEBUG) {
-      println(f"State expanded $numGetSuccessor, evaluated $numSmartActions")
-      println(f"Action considered $numLegalActions, generated $numAllActions")
-      println(f"Elapsed ${System.nanoTime() - startTime}%,dns")
+      println(f"    getSuccessor $numGetSuccessor, eval $numEval, smart $numSmartActions, legal $numLegalActions, all $numAllActions")
+      println(f"    elapsed ${System.nanoTime() - startTime}%,dns")
+      println(f"    hand ${playingState.getHand(agentSecret)}")
     }
     result
   }
@@ -122,19 +127,46 @@ class SmartAgent(agentId: AgentId,
   private def eval(auctionState: AuctionState): Double = Random.nextDouble()
 
   /** Evaluates the given fake playing state from this agent's perspective. */
-  private def eval(fakePlayingState: FakePlayingState): Double = Random.nextDouble()
-
-  private def getCardValueInHandFeature(state: State): Double = ???
-
-  private def getComboValueInHandFeature(state: State): Double = ???
-
-  private def getUnseenCardsValueFeature(state: State): Double = ???
-
-  private def getUnseenComboValueFeature(state: State): Double = ???
-
-  private def getVictoryFeature(fakePlayingState: FakePlayingState): Double =
+  private def eval(fakePlayingState: FakePlayingState): Double = {
+    if (DEBUG) numEval.incrementAndGet()
     fakePlayingState.getWinner match {
-      case Some(winner) => if (winner == agentId) Double.PositiveInfinity else Double.NegativeInfinity
-      case None => 0.0
+      case Some(winner) =>
+        if (winner == agentId) Double.PositiveInfinity else Double.NegativeInfinity
+      case None =>
+        val hand = fakePlayingState.getHand(agentSecret)
+        val handCombos = Combo.allFrom(hand)
+        val handComboValues = handCombos.map(smartComboValue)
+
+        val numCardsInHandFeature = 100.0 / hand.set.size
+        val averageHandComboValueFeature = handComboValues.sum.toDouble / handComboValues.size
+
+        val reward = numCardsInHandFeature + averageHandComboValueFeature
+
+        if (DEBUG && VERBOSE)
+          println(f"    eval $numCardsInHandFeature%.2f $averageHandComboValueFeature%.2f $reward%.2f")
+
+        reward
+    }
+  }
+
+  /**
+    * Raw combo value facts:
+    * - Card values are from 1-15.
+    * - Sequence length range from 5 - 12
+    * - Largest single is 15
+    * - Largest pair is 26
+    * - Largest triplet is 39
+    * - Largest sequence is 32
+    * - Largest bomb is 52
+    * - Two jokers is 29
+    *
+    * @return a value between 1 to 100
+    */
+  private def smartComboValue(combo: Combo): Int =
+    combo.kind match {
+      case SEQUENCE => combo.value + 10 // adjusted to max of 42
+      case BOMB => combo.value + 40 // adjust to max of 92
+      case ROCKET => 100
+      case _ => combo.value
     }
 }
