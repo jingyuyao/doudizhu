@@ -9,11 +9,12 @@ class DumbAgent(agentId: AgentId, agentSecret: AgentSecret) extends Agent(agentI
   override def getAction(auctionState: AuctionState): Boolean = true
 
   /** Returns the play to make, None to pass. */
-  override def getAction(playingState: PlayingState): Option[Combo] = {
-    val hand = playingState.getHand(agentSecret)
-    val combos = Combo.allFrom(hand).sortWith(dumbComboOrdering)
-    combos.find(combo => playingState.isValid(agentSecret, combo))
-  }
+  override def getAction(playingState: PlayingState): Option[Combo] =
+    Combo
+      .allFrom(playingState.getHand(agentSecret))
+      .toList
+      .sortWith(dumbComboOrdering)
+      .find(combo => playingState.isValid(agentSecret, combo))
 
   private def dumbComboOrdering(l: Combo, r: Combo): Boolean =
     if (r.canBeat(l)) true else r.kind > l.kind
