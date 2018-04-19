@@ -15,7 +15,7 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
   override def getAction(playingState: PlayingState): Option[Combo] = {
     val fakePlayingState = playingState.toFake(agentSecret)
     val comboSuccessorPairs =
-      getValidCombos(fakePlayingState, agentId).map(combo => (combo, fakePlayingState.play(agentId, combo)))
+      getSmartCombos(fakePlayingState, agentId).map(combo => (combo, fakePlayingState.play(agentId, combo)))
     if (comboSuccessorPairs.nonEmpty) {
       val otherAgents = getOtherAgentsInOrder(fakePlayingState)
       val comboValues = comboSuccessorPairs.map({ case (combo, state) => (combo, minValue(state, 0, otherAgents)) })
@@ -60,23 +60,25 @@ class SmartAgent(agentId: AgentId, agentSecret: AgentSecret, maxDepth: Int = 1) 
   private def isTerminal(fakePlayingState: FakePlayingState, currentDepth: Int): Boolean =
     currentDepth == maxDepth || fakePlayingState.getWinner.nonEmpty
 
-  private def getSuccessorStates(fakePlayingState: FakePlayingState, id: AgentId): List[FakePlayingState] =
-    getValidCombos(fakePlayingState, id).map(combo => fakePlayingState.play(id, combo))
-
-  private def getValidCombos(fakePlayingState: FakePlayingState, id: AgentId): List[Combo] = {
-    val availableCards =
-      if (id == agentId)
-        fakePlayingState.getHand(agentSecret)
-      else
-        fakePlayingState.otherCardsInPlay(agentSecret)
-    Combo.allFrom(availableCards).filter(combo => fakePlayingState.isValid(id, combo))
-  }
-
   private def getOtherAgentsInOrder(fakePlayingState: FakePlayingState): List[AgentId] = {
     val allAgentIds = fakePlayingState.getAllAgentIds
     val indexOfAgent = allAgentIds.indexOf(agentId)
     // Assumes round-robin style.
     allAgentIds.slice(indexOfAgent + 1, allAgentIds.size) ++ allAgentIds.slice(0, indexOfAgent)
+  }
+
+  private def getSuccessorStates(fakePlayingState: FakePlayingState, id: AgentId): List[FakePlayingState] =
+    getSmartCombos(fakePlayingState, id).map(combo => fakePlayingState.play(id, combo))
+
+  private def getSmartCombos(fakePlayingState: FakePlayingState, id: AgentId): List[Combo] = {
+    val availableCards =
+      if (id == agentId)
+        fakePlayingState.getHand(agentSecret)
+      else
+        fakePlayingState.otherCardsInPlay(agentSecret)
+    val validCombos = Combo.allFrom(availableCards).filter(combo => fakePlayingState.isValid(id, combo))
+    // TODO: smart combo pruning
+    validCombos.take(4)
   }
 
   /** Evaluates the given auction state from this agent's perspective. */
