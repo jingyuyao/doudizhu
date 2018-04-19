@@ -57,7 +57,7 @@ object Game {
             if (winner == playingState.landlord)
               println(f"Landlord ${game.getAgent(winner)} won!")
             else
-              println(f"Peasant ${game.getAgent(winner)} won!")
+              println(f"Peasants ${game.agents.filter(_.agentId != playingState.landlord).mkString(",")} won!")
             return
           case None =>
             (currentAgent.getAction(playingState) match {
