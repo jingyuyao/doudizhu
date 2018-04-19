@@ -38,7 +38,7 @@ object Combo {
     // Covers SEQUENCE
     val sequences =
       (5 to oneOfEachCardValueSorted.size)
-        .flatMap(l => oneOfEachCardValueSorted.sliding(l).filter(_.size == l))
+        .flatMap(l => oneOfEachCardValueSorted.sliding(l))
         .flatMap(l => Combo.from(Cards(l.toSet)))
     combosWithSameCardValue ++ sequences
   }
