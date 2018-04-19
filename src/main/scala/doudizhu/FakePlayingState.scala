@@ -28,9 +28,11 @@ class FakePlayingState(secretIdMap: Map[AgentSecret, AgentId],
   // The only missing requirement compared to PlayingState is checking all plays can be derived
   // from the respective owner's hand.
 
+  private val creatorId = getAgentId(creatorSecret)
+
   def isValid(agentId: AgentId, combo: Combo): Boolean = {
     val agentOwnsPlay =
-      if (getAgentId(creatorSecret) == agentId) {
+      if (creatorId == agentId) {
         combo.cards.set.subsetOf(hands(creatorSecret).set)
       }
       else {
@@ -52,7 +54,7 @@ class FakePlayingState(secretIdMap: Map[AgentSecret, AgentId],
     if (!isValid(agentId, combo))
       throw new IllegalArgumentException("Invalid play")
 
-    if (getAgentId(creatorSecret) == agentId) {
+    if (creatorId == agentId) {
       val newCreatorHand = Cards(hands(creatorSecret).set.diff(combo.cards.set))
       val newHands = hands.updated(creatorSecret, newCreatorHand)
 
@@ -64,15 +66,14 @@ class FakePlayingState(secretIdMap: Map[AgentSecret, AgentId],
       val newHands = hands.map({ case (secret, hand) =>
         if (secret == creatorSecret) {
           (secret, hand)
-        } else if (agentId == getAgentId(secret)) {
-          val newHandSize = hand.set.size - combo.cards.set.size
-          val newHand = remainingOtherCards.take(newHandSize)
-          remainingOtherCards = remainingOtherCards.drop(newHandSize)
-          (secret, Cards(newHand.toSet))
+        } else if (agentId == creatorId) {
+          val split = remainingOtherCards.splitAt(hand.set.size - combo.cards.set.size)
+          remainingOtherCards = split._2
+          (secret, Cards(split._1.toSet))
         } else {
-          val newHand = remainingOtherCards.take(hand.set.size)
-          remainingOtherCards = remainingOtherCards.drop(hand.set.size)
-          (secret, Cards(newHand.toSet))
+          val split = remainingOtherCards.splitAt(hand.set.size)
+          remainingOtherCards = split._2
+          (secret, Cards(split._1.toSet))
         }
       })
       assert(remainingOtherCards.isEmpty)
