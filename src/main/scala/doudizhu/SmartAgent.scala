@@ -1,6 +1,5 @@
 package doudizhu
 
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.parallel.ParIterable
@@ -12,11 +11,12 @@ import scala.util.Random
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
                  maxDepth: Int = 2,
-                 maxMaxLayerExpansions: Int = 4,
-                 maxMinLayerExpansions: Int = 2) extends Agent(agentId, agentSecret) {
-  private val debug = true
+                 maxLayerSize: Int = 4) extends Agent(agentId, agentSecret) {
+  private val DEBUG = true
   private val numGetSuccessor = new AtomicInteger()
-  private val numSuccessor = new AtomicInteger()
+  private val numSmartActions = new AtomicInteger()
+  private val numLegalActions = new AtomicInteger()
+  private val numAllActions = new AtomicInteger()
 
   /** Returns whether to become the landlord. */
   override def getAction(auctionState: AuctionState): Boolean = eval(auctionState) > 0.5
@@ -24,13 +24,15 @@ class SmartAgent(agentId: AgentId,
   /** Returns the play to make, None to pass. */
   override def getAction(playingState: PlayingState): Option[Combo] = {
     val startTime = System.nanoTime()
-    if (debug) {
+    if (DEBUG) {
       numGetSuccessor.set(0)
-      numSuccessor.set(0)
+      numSmartActions.set(0)
+      numLegalActions.set(0)
+      numAllActions.set(0)
     }
     val fakePlayingState = playingState.toFake(agentSecret)
     val comboSuccessorPairs =
-      getSmartCombos(fakePlayingState, agentId).map(combo => (combo, fakePlayingState.play(agentId, combo)))
+      getSmartActions(fakePlayingState, agentId).map(combo => (combo, fakePlayingState.play(agentId, combo)))
     val result =
       if (comboSuccessorPairs.nonEmpty) {
         val otherAgents = getOtherAgentsInOrder(fakePlayingState)
@@ -39,11 +41,10 @@ class SmartAgent(agentId: AgentId,
       } else {
         None
       }
-    if (debug) {
-      println(f"numGetSuccessor $numGetSuccessor")
-      println(f"numSuccessor $numSuccessor")
-      val elapsedSeconds = TimeUnit.SECONDS.convert(System.nanoTime() - startTime, TimeUnit.NANOSECONDS)
-      println(f"elapsed time ${elapsedSeconds}s")
+    if (DEBUG) {
+      println(f"State expanded $numGetSuccessor, evaluated $numSmartActions")
+      println(f"Action considered $numLegalActions, generated $numAllActions")
+      println(f"Elapsed ${System.nanoTime() - startTime}%,dns")
     }
     result
   }
@@ -54,8 +55,8 @@ class SmartAgent(agentId: AgentId,
     } else {
       val successorStates = getSuccessorStates(fakePlayingState, agentId)
       val otherAgents = getOtherAgentsInOrder(fakePlayingState)
-      val minValues = successorStates.map(state => minValue(state, currentDepth, otherAgents)).toList :+ Double.NegativeInfinity
-      minValues.max
+      val minValues = successorStates.map(state => minValue(state, currentDepth, otherAgents))
+      if (minValues.isEmpty) Double.NegativeInfinity else minValues.max
     }
 
   private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherAgents: List[AgentId]): Double =
@@ -86,30 +87,34 @@ class SmartAgent(agentId: AgentId,
   }
 
   private def getSuccessorStates(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[FakePlayingState] = {
-    val result = getSmartCombos(fakePlayingState, id).map(combo => fakePlayingState.play(id, combo))
-    if (debug) {
-      numGetSuccessor.incrementAndGet()
-      numSuccessor.addAndGet(result.size)
-    }
+    val result = getSmartActions(fakePlayingState, id).map(combo => fakePlayingState.play(id, combo))
+    if (DEBUG) numGetSuccessor.incrementAndGet()
     result
   }
 
-  private def getSmartCombos(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
-    val validCombos = getValidCombos(fakePlayingState, id)
+  private def getSmartActions(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
+    val legalActions = getLegalActions(fakePlayingState, id)
     // TODO: smart combo pruning
-    val sortedValidCombos = validCombos.sortWith(
-      (l, r) => if (r.canBeat(l)) true else r.kind > l.kind)
-    val maxNumCombos = if (id == agentId) maxMaxLayerExpansions else maxMinLayerExpansions
-    sortedValidCombos.take(maxNumCombos).par
+    val smartActions = legalActions.take(maxLayerSize)
+    if (DEBUG) numSmartActions.addAndGet(smartActions.size)
+    smartActions
   }
 
-  private def getValidCombos(fakePlayingState: FakePlayingState, id: AgentId): List[Combo] = {
+  private def getLegalActions(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
+    val legalActions = getAllActions(fakePlayingState, id).filter(combo => fakePlayingState.isValid(id, combo))
+    if (DEBUG) numLegalActions.addAndGet(legalActions.size)
+    legalActions
+  }
+
+  private def getAllActions(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
     val availableCards =
       if (id == agentId)
         fakePlayingState.getHand(agentSecret)
       else
         fakePlayingState.otherCardsInPlay(agentSecret)
-    Combo.allFrom(availableCards).filter(combo => fakePlayingState.isValid(id, combo))
+    val allActions = Combo.allFrom(availableCards)
+    if (DEBUG) numAllActions.addAndGet(allActions.size)
+    allActions.par
   }
 
   /** Evaluates the given auction state from this agent's perspective. */

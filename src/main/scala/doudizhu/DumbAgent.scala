@@ -12,6 +12,7 @@ class DumbAgent(agentId: AgentId, agentSecret: AgentSecret) extends Agent(agentI
   override def getAction(playingState: PlayingState): Option[Combo] =
     Combo
       .allFrom(playingState.getHand(agentSecret))
+      .toList
       .sortWith(dumbComboOrdering)
       .find(combo => playingState.isValid(agentSecret, combo))
 
