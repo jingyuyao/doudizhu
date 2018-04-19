@@ -50,23 +50,17 @@ class SmartAgent(agentId: AgentId,
 
   private def maxValue(fakePlayingState: FakePlayingState, currentDepth: Int): Double =
     if (isTerminal(fakePlayingState, currentDepth)) {
-      val result = eval(fakePlayingState)
-      if (debug) println(f"max $currentDepth $result terminal")
-      result
+      eval(fakePlayingState)
     } else {
       val successorStates = getSuccessorStates(fakePlayingState, agentId)
       val otherAgents = getOtherAgentsInOrder(fakePlayingState)
       val minValues = successorStates.map(state => minValue(state, currentDepth, otherAgents)).toList :+ Double.NegativeInfinity
-      val result = minValues.max
-      if (debug) println(f"max $currentDepth $result")
-      result
+      minValues.max
     }
 
   private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherAgents: List[AgentId]): Double =
     if (isTerminal(fakePlayingState, currentDepth)) {
-      val result = eval(fakePlayingState)
-      if (debug) println(f"min $currentDepth $result terminal")
-      result
+      eval(fakePlayingState)
     } else {
       val successorStates = getSuccessorStates(fakePlayingState, otherAgents.head)
       val maxValues =
@@ -78,9 +72,7 @@ class SmartAgent(agentId: AgentId,
           val remainingAgents = otherAgents.drop(1)
           successorStates.map(state => minValue(state, currentDepth, remainingAgents))
         }
-      val result = if (maxValues.isEmpty) Double.PositiveInfinity else maxValues.sum / maxValues.size
-      if (debug) println(f"min $currentDepth $result")
-      result
+      if (maxValues.isEmpty) Double.PositiveInfinity else maxValues.sum / maxValues.size
     }
 
   private def isTerminal(fakePlayingState: FakePlayingState, currentDepth: Int): Boolean =
