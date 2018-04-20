@@ -7,6 +7,7 @@ import scala.util.Random
 
 object Main {
   private val HUMAN = false
+  private val LOG = false
 
   def main(args: Array[String]): Unit = {
     val agents = List(
@@ -15,7 +16,7 @@ object Main {
       new SmartAgent(2, Random.nextString(10))
     )
 
-    if (!HUMAN) {
+    if (LOG) {
       val now = LocalDateTime.now()
       val file = new File(f"logs/$now")
       file.getParentFile.mkdirs()

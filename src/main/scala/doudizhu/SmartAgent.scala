@@ -11,8 +11,8 @@ import scala.collection.parallel.ParIterable
   */
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
-                 maxDepth: Int = 2,
-                 maxLayerSize: Int = 100) extends Agent(agentId, agentSecret) {
+                 maxDepth: Int = 1,
+                 maxExpectiLayerExpansion: Int = 5) extends Agent(agentId, agentSecret) {
   private val DEBUG = true
   private val VERBOSE = false
   private val numGetSuccessor = new AtomicInteger()
@@ -30,7 +30,7 @@ class SmartAgent(agentId: AgentId,
 
     if (DEBUG) println(f"    auction combo avg $averageHandComboValue")
 
-    averageHandComboValue > 9
+    averageHandComboValue > 15
   }
 
   /** Returns the play to make, None to pass. */
@@ -50,7 +50,13 @@ class SmartAgent(agentId: AgentId,
       if (comboSuccessorPairs.nonEmpty) {
         val otherAgents = getOtherAgentsInOrder(fakePlayingState)
         val comboValues = comboSuccessorPairs.map({ case (combo, state) => (combo, minValue(state, 0, otherAgents)) })
-        Some(comboValues.maxBy(_._2)._1)
+        val maxComboValue = comboValues.maxBy(_._2)
+        val currentStateValue = eval(fakePlayingState)
+        if (DEBUG) println(f"max combo $maxComboValue, current state $currentStateValue")
+        if (maxComboValue._2 >= currentStateValue)
+          Some(maxComboValue._1)
+        else
+          None
       } else {
         None
       }
@@ -69,7 +75,7 @@ class SmartAgent(agentId: AgentId,
       val successorStates = getSuccessorStates(fakePlayingState, agentId)
       val otherAgents = getOtherAgentsInOrder(fakePlayingState)
       val minValues = successorStates.map(state => minValue(state, currentDepth, otherAgents))
-      if (minValues.isEmpty) Double.NegativeInfinity else minValues.max
+      minValues.max
     }
 
   private def minValue(fakePlayingState: FakePlayingState, currentDepth: Int, otherAgents: List[AgentId]): Double =
@@ -86,7 +92,7 @@ class SmartAgent(agentId: AgentId,
           val remainingAgents = otherAgents.drop(1)
           successorStates.map(state => minValue(state, currentDepth, remainingAgents))
         }
-      if (maxValues.isEmpty) Double.PositiveInfinity else maxValues.sum / maxValues.size
+      maxValues.sum / maxValues.size
     }
 
   private def isTerminal(fakePlayingState: FakePlayingState, currentDepth: Int): Boolean =
@@ -102,13 +108,18 @@ class SmartAgent(agentId: AgentId,
   private def getSuccessorStates(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[FakePlayingState] = {
     val result = getSmartActions(fakePlayingState, id).map(combo => fakePlayingState.play(id, combo))
     if (DEBUG) numGetSuccessor.incrementAndGet()
-    result
+    // Can always just pass
+    result ++ Seq(fakePlayingState)
   }
 
   private def getSmartActions(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
     val legalActions = getLegalActions(fakePlayingState, id)
-    // TODO: smart combo pruning
-    val smartActions = legalActions.take(maxLayerSize)
+    val smartActions =
+      if (agentId == id)
+        legalActions
+      else
+        legalActions.toList.sortBy(smartComboValue).take(maxExpectiLayerExpansion).par
+
     if (DEBUG) numSmartActions.addAndGet(smartActions.size)
     smartActions
   }
@@ -135,13 +146,16 @@ class SmartAgent(agentId: AgentId,
     if (DEBUG) numEval.incrementAndGet()
     fakePlayingState.getWinner match {
       case Some(winner) =>
-        if (winner == agentId) Double.PositiveInfinity else Double.NegativeInfinity
+        if (winner == agentId || (agentId != fakePlayingState.landlord && winner != fakePlayingState.landlord))
+          Double.PositiveInfinity
+        else
+          Double.NegativeInfinity
       case None =>
         val hand = fakePlayingState.getHand(agentSecret)
         val handCombos = Combo.allFrom(hand)
         val handComboValues = handCombos.map(smartComboValue)
 
-        val numCardsInHandFeature = 100.0 / hand.set.size
+        val numCardsInHandFeature = 200.0 / hand.set.size
         val averageHandComboValueFeature = handComboValues.sum.toDouble / handComboValues.size
 
         val reward = numCardsInHandFeature + averageHandComboValueFeature
