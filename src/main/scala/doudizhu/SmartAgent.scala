@@ -12,7 +12,7 @@ import scala.collection.parallel.ParIterable
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
                  maxDepth: Int = 2,
-                 maxExpectiLayerExpansion: Int = 2) extends Agent(agentId, agentSecret) {
+                 maxExpectiLayerExpansion: Int = 3) extends Agent(agentId, agentSecret) {
   private val numGetSuccessor = new AtomicInteger()
   private val numEval = new AtomicInteger()
   private val numSmartActions = new AtomicInteger()
@@ -133,7 +133,7 @@ class SmartAgent(agentId: AgentId,
       else if (isSameTeam(fakePlayingState, id))
         Cards(Set()) // Assume teammate would not play against you.
       else
-        fakePlayingState.getUnseenCards(agentSecret)
+        Cards(fakePlayingState.getUnseenCards(agentSecret).sorted.take(13).toSet)
     val allActions = availableCards.getAllCombo
     if (DEBUG) numAllActions.addAndGet(allActions.size)
     allActions.par
