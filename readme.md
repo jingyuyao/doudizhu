@@ -8,7 +8,7 @@ The rules implemented will largely follow the one described in: https://www.paga
 # Run
 From command line (arguments must be enclosed in quotes along with the `run` command)
 ```
-sbt "run human smart dumb --debug --log"
+sbt "run human smart dumb --debug"
 ```
 First three required arguments specifies the name of the agents to use.
 Optional arguments include:
