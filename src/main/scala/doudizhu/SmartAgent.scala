@@ -13,8 +13,6 @@ class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
                  maxDepth: Int = 2,
                  maxExpectiLayerExpansion: Int = 2) extends Agent(agentId, agentSecret) {
-  private val DEBUG = true
-  private val VERBOSE = false
   private val numGetSuccessor = new AtomicInteger()
   private val numEval = new AtomicInteger()
   private val numSmartActions = new AtomicInteger()
