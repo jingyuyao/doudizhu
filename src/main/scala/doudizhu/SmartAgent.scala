@@ -153,7 +153,7 @@ class SmartAgent(agentId: AgentId,
         val handCombos = hand.getAllCombo
         val handComboValuesSorted = handCombos.map(smartComboValue).toList.sorted
 
-        val numCardsInHandFeature = 200.0 / hand.set.size
+        val numCardsInHandFeature = 150.0 / hand.set.size
         val medianHandComboValueFeature =
           if (handComboValuesSorted.size % 2 == 1) {
             handComboValuesSorted(handComboValuesSorted.size / 2).toDouble

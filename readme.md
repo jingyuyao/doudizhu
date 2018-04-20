@@ -8,7 +8,7 @@ The rules implemented will largely follow the one described in: https://www.paga
 # Run
 From command line (arguments must be enclosed in quotes along with the `run` command)
 ```
-sbt "run human smart dumb --debug"
+sbt "run human smart dumb --debug --log"
 ```
 First three required arguments specifies the name of the agents to use.
 Optional arguments include:
@@ -19,3 +19,9 @@ specified in the arguments.
 - `--debug` print out debug information.
 - `--verbose` print out verbose debug information (use with `--debug`). This will print out a lot
 of debug information so use sparingly.
+
+# Analyze result
+Here are some simple grep commands to get an overview of the games when logging is enabled:
+- `grep hand logs/*` to see hand progressions
+- `grep won logs/*` to see a list of winners
+- `grep getSuccessor logs/*` to see Expectimax related information
