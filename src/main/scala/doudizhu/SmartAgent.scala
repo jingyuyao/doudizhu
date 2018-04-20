@@ -11,8 +11,7 @@ import scala.collection.parallel.ParIterable
   */
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
-                 maxDepth: Int = 2,
-                 maxExpectiLayerExpansion: Int = 3) extends Agent(agentId, agentSecret) {
+                 maxDepth: Int = 2) extends Agent(agentId, agentSecret) {
   private val numGetSuccessor = new AtomicInteger()
   private val numEval = new AtomicInteger()
   private val numSmartActions = new AtomicInteger()
@@ -81,12 +80,11 @@ class SmartAgent(agentId: AgentId,
             val nextDepth = currentDepth + 1
             successorStates.map(state => expectiMax(state, nextDepth, nextAgent))
           }
-        else
-        {
-          successorStates.map(state => expectiMax(state, currentDepth, nextAgent))
-        }
+          else {
+            successorStates.map(state => expectiMax(state, currentDepth, nextAgent))
+          }
         maxValues
-        .sum / maxValues.size
+          .sum / maxValues.size
       }
     }
 
@@ -111,10 +109,15 @@ class SmartAgent(agentId: AgentId,
   private def getSmartActions(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
     val legalActions = getLegalActions(fakePlayingState, id)
     val smartActions =
-      if (isSameTeam(fakePlayingState, id))
+      if (agentId == id)
+        if (hasInitiative(fakePlayingState))
+          legalActions.toList.sortBy(smartComboValue).take(3).par
+        else
+          legalActions
+      else if (isSameTeam(fakePlayingState, id))
         legalActions
       else
-        legalActions.toList.sortBy(smartComboValue).take(maxExpectiLayerExpansion).par
+        legalActions.toList.sortBy(smartComboValue).take(3).par
 
     if (DEBUG) numSmartActions.addAndGet(smartActions.size)
     smartActions
