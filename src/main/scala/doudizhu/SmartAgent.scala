@@ -24,7 +24,7 @@ class SmartAgent(agentId: AgentId,
   /** Returns whether to become the landlord. */
   override def getAction(auctionState: AuctionState): Boolean = {
     val hand = auctionState.getHand(agentSecret)
-    val handCombos = Combo.allFrom(hand)
+    val handCombos = hand.getAllCombo
     val handComboValues = handCombos.map(smartComboValue)
     val averageHandComboValue = handComboValues.sum.toDouble / handComboValues.size
 
@@ -134,7 +134,7 @@ class SmartAgent(agentId: AgentId,
         Cards(Set())  // Assume teammate would not play against you.
       else
         fakePlayingState.getUnseenCards(agentSecret)
-    val allActions = Combo.allFrom(availableCards)
+    val allActions = availableCards.getAllCombo
     if (DEBUG) numAllActions.addAndGet(allActions.size)
     allActions.par
   }
@@ -150,7 +150,7 @@ class SmartAgent(agentId: AgentId,
           Double.NegativeInfinity
       case None =>
         val hand = fakePlayingState.getHand(agentSecret)
-        val handCombos = Combo.allFrom(hand)
+        val handCombos = hand.getAllCombo
         val handComboValuesSorted = handCombos.map(smartComboValue).toList.sorted
 
         val numCardsInHandFeature = 200.0 / hand.set.size

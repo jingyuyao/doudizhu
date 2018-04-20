@@ -21,6 +21,8 @@ case class Card(value: Int, suit: String) extends Ordered[Card] {
 
 case class Cards(set: Set[Card]) {
   lazy val sorted: List[Card] = set.toList.sorted
+  lazy val getCombo: Option[Combo] = Combo.from(this)
+  lazy val getAllCombo: Iterable[Combo] = Combo.allFrom(this)
 
   /** Get all the cards that partially contains the given string representation. */
   def apply(repr: String): Cards = Cards(set.filter(_.toString.contains(repr)))

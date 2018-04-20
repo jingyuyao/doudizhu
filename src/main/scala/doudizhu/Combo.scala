@@ -25,6 +25,7 @@ case class Combo(cards: Cards, kind: ComboKind, value: Int) {
   override def toString: String = f"$kind $cards"
 }
 
+/** Fairly expensive computations, use cached values from Cards if possible. */
 object Combo {
   /** Return a list of all possible combos from this set of cards. */
   def allFrom(cards: Cards): Iterable[Combo] = {
