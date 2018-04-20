@@ -33,7 +33,6 @@ object Main {
       System.setOut(new PrintStream(new FileOutputStream(file)))
     }
 
-    val initAgent = if (HUMAN) Random.nextInt(agents.size) else 0
-    Game.loop(Game.create(agents, initAgent))
+    Game.loop(Game.create(agents, Random.nextInt(agents.size)))
   }
 }

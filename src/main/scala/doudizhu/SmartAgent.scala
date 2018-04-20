@@ -111,10 +111,8 @@ class SmartAgent(agentId: AgentId,
   private def getSmartActions(fakePlayingState: FakePlayingState, id: AgentId): ParIterable[Combo] = {
     val legalActions = getLegalActions(fakePlayingState, id)
     val smartActions =
-      if (agentId == id)
+      if (isSameTeam(fakePlayingState, id))
         legalActions
-      else if (isSameTeam(fakePlayingState, id))
-        List().par
       else
         legalActions.toList.sortBy(smartComboValue).take(maxExpectiLayerExpansion).par
 
@@ -132,6 +130,8 @@ class SmartAgent(agentId: AgentId,
     val availableCards =
       if (id == agentId)
         fakePlayingState.getHand(agentSecret)
+      else if (isSameTeam(fakePlayingState, id))
+        Cards(Set())  // Assume teammate would not play against you.
       else
         fakePlayingState.getUnseenCards(agentSecret)
     val allActions = Combo.allFrom(availableCards)
