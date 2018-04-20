@@ -66,7 +66,7 @@ object Combo {
       case _ => None
     }
     maybeKind match {
-      case Some(kind) => Some(Combo(cards, kind, values.sum))
+      case Some(kind) => Some(Combo(cards, kind, values.sum / values.size))
       case None => None
     }
   }

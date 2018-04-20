@@ -180,23 +180,17 @@ class SmartAgent(agentId: AgentId,
     }
 
   /**
-    * Raw combo value facts:
-    * - Card values are from 1-15.
-    * - Sequence length range from 5 - 12
-    * - Largest single is 15
-    * - Largest pair is 26
-    * - Largest triplet is 39
-    * - Largest sequence is 32
-    * - Largest bomb is 52
-    * - Two jokers is 29
+    * Raw combo values are average of the cards which ranges from 1-15.
     *
     * @return a value between 1 to 100, not distributed evenly
     */
   private def smartComboValue(combo: Combo): Int =
     combo.kind match {
-      case SEQUENCE => combo.value + 10 // adjusted to max of 42
-      case BOMB => combo.value + 40 // adjust to max of 92
+      case SINGLE => combo.value  // 1-15
+      case PAIR => combo.value + 1  // 2-16
+      case TRIPLET => combo.value + 2  // 3-17
+      case SEQUENCE => combo.value + 3  // 4-18
+      case BOMB => combo.value + 50  // 51-55
       case ROCKET => 100
-      case _ => combo.value
     }
 }
