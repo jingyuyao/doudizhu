@@ -52,7 +52,7 @@ class SmartAgent(agentId: AgentId,
         val comboValues = comboSuccessorPairs.map({ case (combo, state) => (combo, minValue(state, 0, otherAgents)) })
         val maxComboValue = comboValues.maxBy(_._2)
         val currentStateValue = eval(fakePlayingState)
-        if (DEBUG) println(f"max combo $maxComboValue, current state $currentStateValue")
+        if (DEBUG) println(f"    current state $currentStateValue, max combo $maxComboValue")
         if (maxComboValue._2 >= currentStateValue)
           Some(maxComboValue._1)
         else
@@ -154,14 +154,19 @@ class SmartAgent(agentId: AgentId,
         val hand = fakePlayingState.getHand(agentSecret)
         val handCombos = Combo.allFrom(hand)
         val handComboValues = handCombos.map(smartComboValue)
+        val hasInitiative = fakePlayingState.plays.lastOption match {
+          case Some(play) => play.agentId == agentId
+          case None => true
+        }
 
         val numCardsInHandFeature = 300.0 / hand.set.size
         val averageHandComboValueFeature = handComboValues.sum.toDouble / handComboValues.size
+        val initiativeFeature = if (hasInitiative) 10.0 else 0.0
 
-        val reward = numCardsInHandFeature + averageHandComboValueFeature
+        val reward = numCardsInHandFeature + averageHandComboValueFeature + initiativeFeature
 
         if (DEBUG && VERBOSE)
-          println(f"    eval $numCardsInHandFeature%.2f $averageHandComboValueFeature%.2f $reward%.2f")
+          println(f"    eval $numCardsInHandFeature%.1f $averageHandComboValueFeature%.1f $initiativeFeature $reward%.2f")
 
         reward
     }

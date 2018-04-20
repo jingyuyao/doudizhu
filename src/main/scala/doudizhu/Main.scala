@@ -7,7 +7,7 @@ import scala.util.Random
 
 object Main {
   private val HUMAN = false
-  private val LOG = false
+  private val LOG = true
 
   def main(args: Array[String]): Unit = {
     val agents = List(
