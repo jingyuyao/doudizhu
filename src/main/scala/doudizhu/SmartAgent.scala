@@ -11,8 +11,8 @@ import scala.collection.parallel.ParIterable
   */
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
-                 maxDepth: Int = 1,
-                 maxExpectiLayerExpansion: Int = 5) extends Agent(agentId, agentSecret) {
+                 maxDepth: Int = 2,
+                 maxExpectiLayerExpansion: Int = 3) extends Agent(agentId, agentSecret) {
   private val DEBUG = true
   private val VERBOSE = false
   private val numGetSuccessor = new AtomicInteger()
@@ -30,7 +30,7 @@ class SmartAgent(agentId: AgentId,
 
     if (DEBUG) println(f"    auction combo avg $averageHandComboValue")
 
-    averageHandComboValue > 15
+    averageHandComboValue > 17
   }
 
   /** Returns the play to make, None to pass. */
@@ -155,7 +155,7 @@ class SmartAgent(agentId: AgentId,
         val handCombos = Combo.allFrom(hand)
         val handComboValues = handCombos.map(smartComboValue)
 
-        val numCardsInHandFeature = 200.0 / hand.set.size
+        val numCardsInHandFeature = 300.0 / hand.set.size
         val averageHandComboValueFeature = handComboValues.sum.toDouble / handComboValues.size
 
         val reward = numCardsInHandFeature + averageHandComboValueFeature
