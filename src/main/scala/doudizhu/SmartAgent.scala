@@ -28,7 +28,7 @@ class SmartAgent(agentId: AgentId,
 
     if (DEBUG) println(f"    auction combo avg $averageHandComboValue")
 
-    averageHandComboValue > 20
+    averageHandComboValue > 9
   }
 
   /** Returns the play to make, None to pass. */
