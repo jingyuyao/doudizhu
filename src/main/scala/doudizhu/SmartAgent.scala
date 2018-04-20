@@ -159,7 +159,7 @@ class SmartAgent(agentId: AgentId,
           case None => true
         }
 
-        val numCardsInHandFeature = 300.0 / hand.set.size
+        val numCardsInHandFeature = 1000.0 / hand.set.size
         val averageHandComboValueFeature = handComboValues.sum.toDouble / handComboValues.size
         val initiativeFeature = if (hasInitiative) 10.0 else 0.0
 

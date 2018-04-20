@@ -7,14 +7,23 @@ import scala.util.Random
 
 object Main {
   private val HUMAN = false
-  private val LOG = true
+  private val LOG = false
 
   def main(args: Array[String]): Unit = {
-    val agents = List(
-      if (HUMAN) new HumanAgent(0, Random.nextString(10)) else new DumbAgent(0, Random.nextString(10)),
-      new DumbAgent(1, Random.nextString(10)),
-      new SmartAgent(2, Random.nextString(10))
-    )
+    val agents =
+      if (HUMAN)
+        List(
+          new HumanAgent(0, Random.nextString(10)),
+          new SmartAgent(1, Random.nextString(10)),
+          new SmartAgent(2, Random.nextString(10))
+        )
+      else
+        List(
+          new SmartAgent(0, Random.nextString(10)),
+          new DumbAgent(1, Random.nextString(10)),
+          new DumbAgent(2, Random.nextString(10))
+        )
+
 
     if (LOG) {
       val now = LocalDateTime.now()
