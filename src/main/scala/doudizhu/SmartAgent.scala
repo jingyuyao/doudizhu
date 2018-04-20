@@ -155,7 +155,7 @@ class SmartAgent(agentId: AgentId,
         val handCombos = Combo.allFrom(hand)
         val handComboValuesSorted = handCombos.map(smartComboValue).toList.sorted
 
-        val numCardsInHandFeature = 500.0 / hand.set.size
+        val numCardsInHandFeature = 200.0 / hand.set.size
         val medianHandComboValueFeature =
           if (handComboValuesSorted.size % 2 == 1) {
             handComboValuesSorted(handComboValuesSorted.size / 2).toDouble
@@ -164,8 +164,9 @@ class SmartAgent(agentId: AgentId,
             val (up, down) = handComboValuesSorted.splitAt(handComboValuesSorted.size / 2)
             (up.last + down.head) / 2.0
           }
+        val handComboKindsFeature = handCombos.map(_.kind).toSet.size
 
-        val reward = numCardsInHandFeature + medianHandComboValueFeature
+        val reward = numCardsInHandFeature + medianHandComboValueFeature + handComboKindsFeature
 
         if (DEBUG && VERBOSE)
           println(f"    eval $numCardsInHandFeature%.1f $medianHandComboValueFeature%.1f $reward%.1f")
