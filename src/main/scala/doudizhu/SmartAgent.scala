@@ -12,7 +12,7 @@ import scala.collection.parallel.ParIterable
 class SmartAgent(agentId: AgentId,
                  agentSecret: AgentSecret,
                  maxDepth: Int = 2,
-                 maxExpectiLayerExpansion: Int = 3) extends Agent(agentId, agentSecret) {
+                 maxExpectiLayerExpansion: Int = 2) extends Agent(agentId, agentSecret) {
   private val DEBUG = true
   private val VERBOSE = false
   private val numGetSuccessor = new AtomicInteger()
@@ -30,7 +30,7 @@ class SmartAgent(agentId: AgentId,
 
     if (DEBUG) println(f"    auction combo avg $averageHandComboValue")
 
-    averageHandComboValue > 17
+    averageHandComboValue > 20
   }
 
   /** Returns the play to make, None to pass. */
@@ -53,7 +53,7 @@ class SmartAgent(agentId: AgentId,
         val maxComboValue = comboValues.maxBy(_._2)
         val currentStateValue = eval(fakePlayingState)
         if (DEBUG) println(f"    current state $currentStateValue, max combo $maxComboValue")
-        if (maxComboValue._2 >= currentStateValue)
+        if (hasInitiative(fakePlayingState) || maxComboValue._2 >= currentStateValue)
           Some(maxComboValue._1)
         else
           None
@@ -154,30 +154,31 @@ class SmartAgent(agentId: AgentId,
         val hand = fakePlayingState.getHand(agentSecret)
         val handCombos = Combo.allFrom(hand)
         val handComboValuesSorted = handCombos.map(smartComboValue).toList.sorted
-        val hasInitiative = fakePlayingState.plays.lastOption match {
-          case Some(play) => play.agentId == agentId
-          case None => true
-        }
 
-        val numCardsInHandFeature = 1000.0 / hand.set.size
+        val numCardsInHandFeature = 500.0 / hand.set.size
         val medianHandComboValueFeature =
           if (handComboValuesSorted.size % 2 == 1) {
-            handComboValuesSorted(handComboValuesSorted.size / 2)
+            handComboValuesSorted(handComboValuesSorted.size / 2).toDouble
           }
           else {
             val (up, down) = handComboValuesSorted.splitAt(handComboValuesSorted.size / 2)
             (up.last + down.head) / 2.0
           }
-        val initiativeFeature = if (hasInitiative) 10.0 else 0.0
 
-        val reward = numCardsInHandFeature + medianHandComboValueFeature + initiativeFeature
+        val reward = numCardsInHandFeature + medianHandComboValueFeature
 
         if (DEBUG && VERBOSE)
-          println(f"    eval $numCardsInHandFeature%.1f $medianHandComboValueFeature $initiativeFeature $reward%.2f")
+          println(f"    eval $numCardsInHandFeature%.1f $medianHandComboValueFeature%.1f $reward%.1f")
 
         reward
     }
   }
+
+  private def hasInitiative(fakePlayingState: FakePlayingState) =
+    fakePlayingState.plays.lastOption match {
+      case Some(play) => play.agentId == agentId
+      case None => true
+    }
 
   /**
     * Raw combo value facts:
