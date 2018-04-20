@@ -153,20 +153,27 @@ class SmartAgent(agentId: AgentId,
       case None =>
         val hand = fakePlayingState.getHand(agentSecret)
         val handCombos = Combo.allFrom(hand)
-        val handComboValues = handCombos.map(smartComboValue)
+        val handComboValuesSorted = handCombos.map(smartComboValue).toList.sorted
         val hasInitiative = fakePlayingState.plays.lastOption match {
           case Some(play) => play.agentId == agentId
           case None => true
         }
 
         val numCardsInHandFeature = 1000.0 / hand.set.size
-        val averageHandComboValueFeature = handComboValues.sum.toDouble / handComboValues.size
+        val medianHandComboValueFeature =
+          if (handComboValuesSorted.size % 2 == 1) {
+            handComboValuesSorted(handComboValuesSorted.size / 2)
+          }
+          else {
+            val (up, down) = handComboValuesSorted.splitAt(handComboValuesSorted.size / 2)
+            (up.last + down.head) / 2.0
+          }
         val initiativeFeature = if (hasInitiative) 10.0 else 0.0
 
-        val reward = numCardsInHandFeature + averageHandComboValueFeature + initiativeFeature
+        val reward = numCardsInHandFeature + medianHandComboValueFeature + initiativeFeature
 
         if (DEBUG && VERBOSE)
-          println(f"    eval $numCardsInHandFeature%.1f $averageHandComboValueFeature%.1f $initiativeFeature $reward%.2f")
+          println(f"    eval $numCardsInHandFeature%.1f $medianHandComboValueFeature $initiativeFeature $reward%.2f")
 
         reward
     }
