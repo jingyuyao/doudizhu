@@ -50,7 +50,7 @@ class SmartAgent(agentId: AgentId,
         val comboValues = comboSuccessorPairs.map({ case (combo, state) => (combo, expectiMax(state, 0, nextAgent)) })
         val maxComboValue = comboValues.maxBy(_._2)
         val currentStateValue = eval(fakePlayingState)
-        if (DEBUG) println(f"    current state $currentStateValue, max combo $maxComboValue")
+        if (DEBUG) println(f"    current state $currentStateValue%.2f, max combo ${maxComboValue._2}%.2f ${maxComboValue._1}")
         if (hasInitiative(fakePlayingState) || maxComboValue._2 >= currentStateValue)
           Some(maxComboValue._1)
         else
@@ -81,10 +81,12 @@ class SmartAgent(agentId: AgentId,
             val nextDepth = currentDepth + 1
             successorStates.map(state => expectiMax(state, nextDepth, nextAgent))
           }
-          else {
-            successorStates.map(state => expectiMax(state, currentDepth, nextAgent))
-          }
-        maxValues.sum / maxValues.size
+        else
+        {
+          successorStates.map(state => expectiMax(state, currentDepth, nextAgent))
+        }
+        maxValues
+        .sum / maxValues.size
       }
     }
 
@@ -129,7 +131,7 @@ class SmartAgent(agentId: AgentId,
       if (id == agentId)
         fakePlayingState.getHand(agentSecret)
       else if (isSameTeam(fakePlayingState, id))
-        Cards(Set())  // Assume teammate would not play against you.
+        Cards(Set()) // Assume teammate would not play against you.
       else
         fakePlayingState.getUnseenCards(agentSecret)
     val allActions = availableCards.getAllCombo
@@ -184,11 +186,11 @@ class SmartAgent(agentId: AgentId,
     */
   private def smartComboValue(combo: Combo): Int =
     combo.kind match {
-      case SINGLE => combo.value  // 1-15
-      case PAIR => combo.value + 1  // 2-16
-      case TRIPLET => combo.value + 2  // 3-17
-      case SEQUENCE => combo.value + 3  // 4-18
-      case BOMB => combo.value + 50  // 51-55
+      case SINGLE => combo.value // 1-15
+      case PAIR => combo.value + 1 // 2-16
+      case TRIPLET => combo.value + 2 // 3-17
+      case SEQUENCE => combo.value + 3 // 4-18
+      case BOMB => combo.value + 50 // 51-55
       case ROCKET => 100
     }
 }
